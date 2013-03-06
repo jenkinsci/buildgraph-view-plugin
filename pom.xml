@@ -3,15 +3,40 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.480.3</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>1.480</version>
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>buildgraph-view</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Build+Graph+View+Plugin</url>
 
-  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
+  <developers>
+    <developer>
+      <id>ndeloof</id>
+      <name>Nicolas De Loof</name>
+    </developer>
+    <developer>
+      <id>gregory144</id>
+      <name>Greg Gross</name>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://git@github.com/jenkinsci/buildgraph-view-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/buildgraph-view-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/buildgraph-view-plugin</url>
+  </scm>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jgrapht</groupId>
+      <artifactId>jgrapht-jdk1.5</artifactId>
+      <version>0.7.3</version>
+    </dependency>
+  </dependencies>
+  
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>

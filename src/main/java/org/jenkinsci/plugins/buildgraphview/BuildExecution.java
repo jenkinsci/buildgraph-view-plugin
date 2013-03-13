@@ -1,25 +1,25 @@
 package org.jenkinsci.plugins.buildgraphview;
 
-import hudson.model.Run;
+import hudson.model.AbstractBuild;
 
 import java.text.DateFormat;
 
 /**
- * A wrapper on a Run that maitains additional layout information, used during graphical rendering.
+ * A wrapper on a AbstractBuild that maitains additional layout information, used during graphical rendering.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class BuildExecution {
 
-    private transient Run build;
+    private transient AbstractBuild build;
 
-    // A unique number that identifies when in the FlowRun this job was started
+    // A unique number that identifies when in the FlowAbstractBuild this job was started
     private int buildIndex;
 
     private int displayColumn;
 
     private int displayRow;
 
-    public BuildExecution(Run build) {
+    public BuildExecution(AbstractBuild build) {
         this.build = build;
     }
 
@@ -42,7 +42,7 @@ public class BuildExecution {
         return formattedStartTime;
     }
 
-    public Run<?,?> getBuild() {
+    public AbstractBuild<?,?> getBuild() {
         return build;
     }
 

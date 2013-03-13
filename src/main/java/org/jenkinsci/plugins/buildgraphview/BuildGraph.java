@@ -1,11 +1,14 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Cause;
-import hudson.model.Run;
+import hudson.model.AbstractBuild;
+import jenkins.model.Jenkins;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -16,11 +19,11 @@ import java.util.List;
  */
 public class BuildGraph implements Action {
 
-    private transient DirectedGraph<BuildExecution, Edge> graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
+    private transient DirectedGraph<BuildExecution, Edge> graph;
 
     private BuildExecution start;
 
-    public BuildGraph(Run run) {
+    public BuildGraph(AbstractBuild run) {
         this.start = new BuildExecution(run);
     }
 
@@ -36,13 +39,42 @@ public class BuildGraph implements Action {
         return "BuildGraph";
     }
 
+    public BuildExecution getStart() {
+        return start;
+    }
+
+    public DirectedGraph<BuildExecution, Edge> getGraph() {
+        graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
+        graph.addVertex(start);
+        computeGraphFrom(start);
+        return graph;
+    }
+
     private void computeGraphFrom(BuildExecution b) {
-        List<Run> runs = DownStream.forBuild(b.getBuild()).getDownStream();
-        for (Run r : runs) {
+        List<AbstractBuild> runs = getDownStream(b.getBuild());
+        for (AbstractBuild r : runs) {
             BuildExecution next = new BuildExecution(r);
+            graph.addVertex(next);
             graph.addEdge(b, next, new Edge(b, next));
             computeGraphFrom(next);
         }
+    }
+
+    private List<AbstractBuild> getDownStream(AbstractBuild r) {
+        AbstractProject parent = (AbstractProject) r.getParent();
+        String name = parent.getName();
+        List<AbstractBuild> runs = new ArrayList<AbstractBuild>();
+        List<AbstractProject> jobs = Jenkins.getInstance().getDependencyGraph().getDownstream(parent);
+        for (AbstractProject job : jobs) {
+            List<AbstractBuild> builds = (List<AbstractBuild>) job.getBuilds();
+            for (AbstractBuild b : builds) {
+                Cause.UpstreamCause cause = (Cause.UpstreamCause) b.getCause(Cause.UpstreamCause.class);
+                if (cause != null && cause.getUpstreamProject().equals(name) && cause.getUpstreamBuild() == r.getNumber()) {
+                    runs.add(b);
+                }
+            }
+        }
+        return runs;
     }
 
     /**

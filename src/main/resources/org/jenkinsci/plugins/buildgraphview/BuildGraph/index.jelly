@@ -1,5 +1,8 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson">
+    <l:layout norefresh="true">
+    <st:include page="sidepanel.jelly" it="${it.start.build}"/>
+    <l:main-panel>
 
     <script type='text/javascript' src='${resURL}/plugin/buildgraph-view-plugin/scripts/jquery.min.js'></script>
     <script type='text/javascript' src='${resURL}/plugin/buildgraph-view-plugin/scripts/jquery-ui.min.js'></script>
@@ -53,9 +56,11 @@
     }
     </style>
 
-    <j:if test="${not empty it.jobsGraph.outgoingEdgesOf(it.startJob)}">
+    <j:set var="graph" value="${it.graph}"/>
+    <p>[DEBUG] graph = ${graph}</p>
+    <j:if test="${not empty graph.outgoingEdgesOf(it.start)}">
 
-        <j:forEach var="job" items="${it.jobsGraph.vertexSet()}">
+        <j:forEach var="job" items="${graph.vertexSet()}">
             <st:include page="build-step.jelly"/>
         </j:forEach>
 
@@ -180,13 +185,13 @@ jsPlumb.ready(function() {
     resetFlowWidth();
 
     jsPlumb.addEndpoint(
-        <j:forEach var="vertex" items="${it.jobsGraph.vertexSet()}" varStatus="loop">
+        <j:forEach var="vertex" items="${graph.vertexSet()}" varStatus="loop">
             '${vertex.id}'
             <j:if test="${!loop.last}">,</j:if>
         </j:forEach>
     );
 
-    <j:forEach var="edge" items="${it.jobsGraph.edgeSet()}" varStatus="status">
+    <j:forEach var="edge" items="${graph.edgeSet()}" varStatus="status">
         <j:choose>
         <j:when test="${edge.source.displayColumn + 1 eq edge.target.displayColumn}">
             jsPlumb.connect({
@@ -223,4 +228,6 @@ jsPlumb.ready(function() {
 
     </j:if>
 
+    </l:main-panel>
+  </l:layout>
 </j:jelly>

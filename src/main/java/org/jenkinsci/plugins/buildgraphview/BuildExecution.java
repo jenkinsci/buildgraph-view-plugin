@@ -32,14 +32,17 @@ public class BuildExecution {
     }
 
     public String getStartTime() {
-        String formattedStartTime = "";
-        if (build.getTime() != null) {
-            formattedStartTime = DateFormat.getDateTimeInstance(
+        if (isStarted()) {
+            return DateFormat.getDateTimeInstance(
                     DateFormat.SHORT,
                     DateFormat.SHORT)
                     .format(build.getTime());
         }
-        return formattedStartTime;
+        return "";
+    }
+
+    public boolean isStarted() {
+        return build.getTime() != null;
     }
 
     public AbstractBuild<?,?> getBuild() {
@@ -71,7 +74,7 @@ public class BuildExecution {
     }
 
     public String toString() {
-        return (build != null ? " #" + build.number : "");
+        return (build != null ? build.getParent().getName() + " #" + build.number : "");
     }
 
 }

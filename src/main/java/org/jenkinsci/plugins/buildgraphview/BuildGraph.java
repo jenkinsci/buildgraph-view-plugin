@@ -145,6 +145,10 @@ public class BuildGraph implements Action {
             return target;
         }
 
+        @Override
+        public String toString() {
+            return source.toString() + " -> " + target.toString();
+        }
     }
 }
 

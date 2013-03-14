@@ -4,9 +4,9 @@
     <st:include page="sidepanel.jelly" it="${it.start.build}"/>
     <l:main-panel>
 
-    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view-plugin/scripts/jquery.min.js'></script>
-    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view-plugin/scripts/jquery-ui.min.js'></script>
-    <script type="text/javascript" src="${resURL}/plugin/buildgraph-view-plugin/scripts/jsPlumb.js "></script>
+    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery.min.js'></script>
+    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery-ui.min.js'></script>
+    <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jsPlumb.js"></script>
 
     <style type="text/css">
     #flow {

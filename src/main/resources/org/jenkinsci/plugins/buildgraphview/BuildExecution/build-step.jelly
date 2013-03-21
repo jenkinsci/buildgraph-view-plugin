@@ -5,7 +5,7 @@
         id="${it.id}"
         data-column="${it.displayColumn}"
         data-row="${it.displayRow}"
-        style="background-color: ${it.colorForHtml};">
+        style="background-color: ${it.build.iconColor.htmlBaseColor};">
 
         <div class="title">
             <a href="${it.buildUrl}">${it}</a>

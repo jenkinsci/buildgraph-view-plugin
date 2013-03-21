@@ -9,10 +9,6 @@
     <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jsPlumb.js"></script>
 
     <style type="text/css">
-    #flow {
-        margin: 0;
-        list-style-type: none;
-    }
     .column-wrapper {
         margin: 20px;
         display: inline-block;
@@ -23,13 +19,13 @@
         border:solid 1px black;
         border-radius: 4px;
         box-shadow: 2px 2px 5px black;
-        font-size: 14px;
+        font-size: 1em;
     }
 
     .build > .title {
         padding: 4px;
         border-bottom: 1px solid black;
-        font-size: 20px;
+        font-size: 1em;
         font-weight: bold;
     }
 

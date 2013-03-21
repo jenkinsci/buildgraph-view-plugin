@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.buildgraphview;
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import java.text.DateFormat;
 
@@ -10,17 +10,18 @@ import java.text.DateFormat;
  */
 public class BuildExecution {
 
-    private transient AbstractBuild build;
+    private transient Run build;
 
     // A unique number that identifies when in the FlowAbstractBuild this job was started
-    private int buildIndex;
+    private final int buildIndex;
 
     private int displayColumn;
 
     private int displayRow;
 
-    public BuildExecution(AbstractBuild build) {
+    public BuildExecution(Run build, int buildIndex) {
         this.build = build;
+        this.buildIndex = buildIndex;
     }
 
     public String getId() {
@@ -45,7 +46,7 @@ public class BuildExecution {
         return build.getTime() != null;
     }
 
-    public AbstractBuild<?,?> getBuild() {
+    public Run<?,?> getBuild() {
         return build;
     }
 
@@ -59,10 +60,6 @@ public class BuildExecution {
 
     public int getDisplayRow() {
         return displayRow;
-    }
-
-    public void setBuildIndex(int buildIndex) {
-        this.buildIndex = buildIndex;
     }
 
     public void setDisplayColumn(int displayColumn) {

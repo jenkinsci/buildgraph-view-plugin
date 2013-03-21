@@ -4,6 +4,9 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.AbstractBuild;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.util.RunList;
 import jenkins.model.Jenkins;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -23,8 +26,10 @@ public class BuildGraph implements Action {
 
     private BuildExecution start;
 
+    private transient int index = 0;
+
     public BuildGraph(AbstractBuild run) {
-        this.start = new BuildExecution(run);
+        this.start = new BuildExecution(run, 0);
     }
 
     public String getIconFileName() {
@@ -46,31 +51,36 @@ public class BuildGraph implements Action {
     public DirectedGraph<BuildExecution, Edge> getGraph() {
         graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
         graph.addVertex(start);
+        index = 0;
         computeGraphFrom(start);
+        setupDisplayGrid();
         return graph;
     }
 
     private void computeGraphFrom(BuildExecution b) {
-        List<AbstractBuild> runs = getDownStream(b.getBuild());
-        for (AbstractBuild r : runs) {
-            BuildExecution next = new BuildExecution(r);
+        List<Run> runs = getDownStream(b.getBuild());
+        for (Run r : runs) {
+            BuildExecution next = new BuildExecution(r, ++index);
             graph.addVertex(next);
             graph.addEdge(b, next, new Edge(b, next));
             computeGraphFrom(next);
         }
     }
 
-    private List<AbstractBuild> getDownStream(AbstractBuild r) {
-        AbstractProject parent = (AbstractProject) r.getParent();
+    private List<Run> getDownStream(Run r) {
+        Job parent = r.getParent();
         String name = parent.getName();
-        List<AbstractBuild> runs = new ArrayList<AbstractBuild>();
-        List<AbstractProject> jobs = Jenkins.getInstance().getDependencyGraph().getDownstream(parent);
-        for (AbstractProject job : jobs) {
-            List<AbstractBuild> builds = (List<AbstractBuild>) job.getBuilds();
-            for (AbstractBuild b : builds) {
-                Cause.UpstreamCause cause = (Cause.UpstreamCause) b.getCause(Cause.UpstreamCause.class);
-                if (cause != null && cause.getUpstreamProject().equals(name) && cause.getUpstreamBuild() == r.getNumber()) {
-                    runs.add(b);
+        List<Run> runs = new ArrayList<Run>();
+        if (parent instanceof AbstractProject) {
+            // I can't see any reason DependencyGraph require AbstractProject, not Run
+            List<AbstractProject> jobs = Jenkins.getInstance().getDependencyGraph().getDownstream((AbstractProject) parent);
+            for (Job job : jobs) {
+                List<Run> builds = job.getBuilds();
+                for (Run b : builds) {
+                    Cause.UpstreamCause cause = (Cause.UpstreamCause) b.getCause(Cause.UpstreamCause.class);
+                    if (cause != null && cause.getUpstreamProject().equals(name) && cause.getUpstreamBuild() == r.getNumber()) {
+                        runs.add(b);
+                    }
                 }
             }
         }

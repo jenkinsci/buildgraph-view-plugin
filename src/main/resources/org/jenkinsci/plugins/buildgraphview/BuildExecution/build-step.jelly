@@ -1,0 +1,36 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+
+    <div class="build"
+        id="${it.id}"
+        data-column="${it.displayColumn}"
+        data-row="${it.displayRow}"
+        style="background-color: ${it.colorForHtml};">
+
+        <div class="title">
+            <a href="${it.buildUrl}">${it}</a>
+        </div>
+        <div class="details">
+            <j:choose>
+            <j:when test="${it.started}">
+                <j:choose>
+                <j:when test="${it.build.building}">
+                    Started: ${it.build.timestampString} ago<br/>
+                    <t:buildProgressBar build="${it.build}"/>
+                </j:when>
+                <j:otherwise>
+                    Status: <span class="status"><t:buildStatusSummary build="${it.build}"/></span><br/>
+                    Started: ${it.startTime}<br/>
+                    Duration: ${it.build.durationString}<br/>
+                    <a href="${it.buildUrl}console">Console Output</a>
+                </j:otherwise>
+                </j:choose>
+            </j:when>
+            <j:otherwise>
+                Scheduled
+            </j:otherwise>
+            </j:choose>
+        </div>
+    </div>
+
+</j:jelly>

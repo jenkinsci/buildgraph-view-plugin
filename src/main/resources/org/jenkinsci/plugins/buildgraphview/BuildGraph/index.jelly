@@ -60,8 +60,8 @@
     <p>[DEBUG] graph = ${graph}</p>
     <j:if test="${not empty graph.outgoingEdgesOf(it.start)}">
 
-        <j:forEach var="job" items="${graph.vertexSet()}">
-            <st:include page="build-step.jelly"/>
+        <j:forEach var="vertex" items="${graph.vertexSet()}">
+            <st:include page="build-step.jelly" it="${vertex}"/>
         </j:forEach>
 
         <ul id="flow"></ul>

@@ -57,7 +57,6 @@
     </style>
 
     <j:set var="graph" value="${it.graph}"/>
-    <p>[DEBUG] graph = ${graph}</p>
     <j:if test="${not empty graph.outgoingEdgesOf(it.start)}">
 
         <j:forEach var="vertex" items="${graph.vertexSet()}">

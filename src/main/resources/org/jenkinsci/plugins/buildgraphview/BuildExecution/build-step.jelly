@@ -8,9 +8,12 @@
         style="background-color: ${it.build.iconColor.htmlBaseColor};">
 
         <div class="title">
-            <a href="${it.buildUrl}">${it}</a>
+            <a href="${it.buildUrl}">${it.build.fullDisplayName}</a>
         </div>
         <div class="details">
+            <j:if test="${!empty(it.build.description)}">
+                ${it.build.description}<br/>
+            </j:if>            
             <j:choose>
             <j:when test="${it.started}">
                 <j:choose>

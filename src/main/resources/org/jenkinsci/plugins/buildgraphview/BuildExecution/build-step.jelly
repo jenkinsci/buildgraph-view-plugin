@@ -12,7 +12,7 @@
         </div>
         <div class="details">
             <j:if test="${!empty(it.build.description)}">
-                ${it.build.description}<br/>
+                <j:out value="${it.build.description}"/><br/>
             </j:if>            
             <j:choose>
             <j:when test="${it.started}">

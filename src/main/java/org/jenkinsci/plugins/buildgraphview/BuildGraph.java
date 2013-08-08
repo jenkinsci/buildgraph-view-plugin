@@ -63,12 +63,19 @@ public class BuildGraph implements Action {
         for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
-                BuildExecution next = new BuildExecution(r, ++index);
-                boolean added = graph.addVertex(next);
+                BuildExecution next = getExecution(r);
+                graph.addVertex(next); // ignore if already added
                 graph.addEdge(b, next, new Edge(b, next));
-                if (added) computeGraphFrom(next);
+                computeGraphFrom(next);
             }
         }
+    }
+
+    private BuildExecution getExecution(Run r) {
+        for (BuildExecution buildExecution : graph.vertexSet()) {
+            if (buildExecution.getBuild().equals(r)) return buildExecution;
+        }
+        return new BuildExecution(r, ++index);
     }
 
     /**

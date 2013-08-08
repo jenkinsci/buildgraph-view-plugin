@@ -24,8 +24,8 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://git@github.com/jenkinsci/buildgraph-view-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/buildgraph-view-plugin.git</developerConnection>
+    <connection>scm:git:git@github.com:jenkinsci/buildgraph-view.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/buildgraph-view.git</developerConnection>
     <url>https://github.com/jenkinsci/buildgraph-view-plugin</url>
   </scm>
 

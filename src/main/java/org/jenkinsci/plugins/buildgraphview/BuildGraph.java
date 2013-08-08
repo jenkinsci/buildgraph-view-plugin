@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.
@@ -48,7 +49,7 @@ public class BuildGraph implements Action {
         return start;
     }
 
-    public DirectedGraph<BuildExecution, Edge> getGraph() {
+    public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException {
         graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
         graph.addVertex(start);
         index = 0;
@@ -57,34 +58,17 @@ public class BuildGraph implements Action {
         return graph;
     }
 
-    private void computeGraphFrom(BuildExecution b) {
-        List<Run> runs = getDownStream(b.getBuild());
-        for (Run r : runs) {
-            BuildExecution next = new BuildExecution(r, ++index);
-            graph.addVertex(next);
-            graph.addEdge(b, next, new Edge(b, next));
-            computeGraphFrom(next);
-        }
-    }
-
-    private List<Run> getDownStream(Run r) {
-        Job parent = r.getParent();
-        String name = parent.getName();
-        List<Run> runs = new ArrayList<Run>();
-        if (parent instanceof AbstractProject) {
-            // I can't see any reason DependencyGraph require AbstractProject, not Run
-            List<AbstractProject> jobs = Jenkins.getInstance().getDependencyGraph().getDownstream((AbstractProject) parent);
-            for (Job job : jobs) {
-                List<Run> builds = job.getBuilds();
-                for (Run b : builds) {
-                    Cause.UpstreamCause cause = (Cause.UpstreamCause) b.getCause(Cause.UpstreamCause.class);
-                    if (cause != null && cause.getUpstreamProject().equals(name) && cause.getUpstreamBuild() == r.getNumber()) {
-                        runs.add(b);
-                    }
-                }
+    private void computeGraphFrom(BuildExecution b) throws ExecutionException, InterruptedException {
+        Run run = b.getBuild();
+        for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
+            List<Run> runs = declarer.getDownStream(run);
+            for (Run r : runs) {
+                BuildExecution next = new BuildExecution(r, ++index);
+                boolean added = graph.addVertex(next);
+                graph.addEdge(b, next, new Edge(b, next));
+                if (added) computeGraphFrom(next);
             }
         }
-        return runs;
     }
 
     /**
@@ -134,8 +118,6 @@ public class BuildGraph implements Action {
         }
         return allPaths;
     }
-
-
 
     public static class Edge {
 

@@ -5,7 +5,7 @@ import hudson.model.Run;
 import java.text.DateFormat;
 
 /**
- * A wrapper on a AbstractBuild that maitains additional layout information, used during graphical rendering.
+ * A wrapper on a AbstractBuild that maintains additional layout information, used during graphical rendering.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class BuildExecution {
@@ -74,4 +74,16 @@ public class BuildExecution {
         return (build != null ? build.getParent().getName() + " #" + build.number : "");
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BuildExecution) {
+            return build.equals(((BuildExecution) obj).build);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return build.hashCode();
+    }
 }

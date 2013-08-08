@@ -6,7 +6,7 @@
 
     <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery.min.js'></script>
     <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery-ui.min.js'></script>
-    <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jsPlumb.js"></script>
+    <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jquery.jsPlumb-1.3.16-all-min.js"></script>
 
     <style type="text/css">
     .column-wrapper {
@@ -22,22 +22,24 @@
         font-size: 1em;
     }
 
-    .build > .title {
+    .build .title {
+        border-radius: 4px 4px 0 0;
         padding: 4px;
         border-bottom: 1px solid black;
+        text-align:center;
         font-size: 1em;
         font-weight: bold;
     }
 
-    .build > .details {
+    .build .details {
         min-height: 40px;
         padding: 4px;
     }
-    .build > .details > .status font {
+    .build .details .status font {
         /* override the default color (can be red on failure) */
         color: black;
     }
-    
+
     .connector {
         margin: 10px;
         height: 20px;
@@ -97,15 +99,6 @@ function groupBuildsByColumn() {
     });
 }
 
-function resetFlowWidth() {
-    // calculate and set the total width of all columns
-    var width = 0;
-    $('.column-wrapper').each(function(index, column) {
-        width += $(column).outerWidth(true);
-    });
-    $('#flow').width(width + ($('.column-wrapper').length * 5));
-}
-
 // gets a color from the list
 var nextColor = (function() { // create private scope
     var colors = ['red', 'blue', 'green', 'aqua', 'brown', 'purple', 'gold'];
@@ -162,6 +155,10 @@ function sortConnectors() {
     });
 }
 
+$(window).resize(function(){
+      jsPlumb.repaintEverything();
+});
+
 ]]>
 </script>
 
@@ -177,8 +174,6 @@ jsPlumb.ready(function() {
     
     groupBuildsByColumn();
     
-    resetFlowWidth();
-
     jsPlumb.addEndpoint(
         <j:forEach var="vertex" items="${graph.vertexSet()}" varStatus="loop">
             '${vertex.id}'

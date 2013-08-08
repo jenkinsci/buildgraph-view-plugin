@@ -74,13 +74,13 @@
 
 var $flow = $('ul#flow');
 
-function groupBuildsByColumn() { 
+function groupBuildsByColumn() {
     $('.build').each(function(index, build) {
         var $build = $(build)
         // place it in it's respective columns
         var column = $build.data('column');
         // create the column wrapper if it doesn't already exist
-        if ($flow.find('li').length <= column) {
+        while ($flow.find('li').length <= column) {
             $flow.append('<li></li>');
         }
         $build.remove();
@@ -103,7 +103,7 @@ function groupBuildsByColumn() {
 var nextColor = (function() { // create private scope
     var colors = ['red', 'blue', 'green', 'aqua', 'brown', 'purple', 'gold'];
     var currentColorIndex = -1;
-    
+
     return function() {
         currentColorIndex = (currentColorIndex + 1) % colors.length;
         return colors[currentColorIndex];
@@ -117,15 +117,15 @@ function connectJobs(source, target) {
     var paintStyle = { strokeStyle: nextColor(), lineWidth: '2' };
     for (var i = source.column; i < target.column - 1; i++) {
         var connectorId = 'connector-' + source.id + '-' + target.id + '-' + i;
-        
+
         // create a connector element from the template
         var $connector = $('#connector-template').clone();
         $connector.attr('id', connectorId);
         $connector.data({ source: source });
-        
+
         // put in connector in the right column
         $($('.column-wrapper').get(i+1)).append($connector);
-        
+
         // draw the lines between the connectors, including between the left
         // and right sides of the connectors
         var leftConnector = $connector.find('.left');
@@ -147,7 +147,7 @@ function sortConnectors() {
                 // use column as a secondary sort key
                 return aSource.column < bSource.column;
             }
-            // connectors that are connecting higher rows need to be placed 
+            // connectors that are connecting higher rows need to be placed
             return aSource.row > bSource.row;
         });
         $(connectorsInColumn).remove();

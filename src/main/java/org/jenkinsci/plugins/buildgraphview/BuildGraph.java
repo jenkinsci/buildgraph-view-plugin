@@ -97,7 +97,7 @@ public class BuildGraph implements Action {
             for (int column = 0; column < path.size(); column++) {
                 BuildExecution job = path.get(column);
                 job.setDisplayColumn(Math.max(job.getDisplayColumn(), column));
-                job.setDisplayRow(row);
+                job.setDisplayRow(row + 1);
             }
         }
     }

@@ -99,22 +99,11 @@ function groupBuildsByColumn() {
     });
 }
 
-// gets a color from the list
-var nextColor = (function() { // create private scope
-    var colors = ['red', 'blue', 'green', 'aqua', 'brown', 'purple', 'gold'];
-    var currentColorIndex = -1;
-
-    return function() {
-        currentColorIndex = (currentColorIndex + 1) % colors.length;
-        return colors[currentColorIndex];
-    };
-})();
-
 // creates a connection between 2 jobs that aren't in consecutive columns
 // by placing placeholder connectors in the columns between the 2 jobs
-function connectJobs(source, target) {
+function connectJobs(source, target, color) {
     var lastConnector = source.id;
-    var paintStyle = { strokeStyle: nextColor(), lineWidth: '2' };
+    var paintStyle = { strokeStyle: color, lineWidth: '2' };
     for (var i = source.column; i < target.column - 1; i++) {
         var connectorId = 'connector-' + source.id + '-' + target.id + '-' + i;
 
@@ -192,7 +181,8 @@ jsPlumb.ready(function() {
                     id: "arrow",
                     length: 7,
                     width: 7
-                }]]
+                }]],
+                paintStyle:{ strokeStyle: 'grey', lineWidth: '2' }
             });
         </j:when>
         <j:otherwise>
@@ -204,7 +194,7 @@ jsPlumb.ready(function() {
                 id: "${edge.target.id}", 
                 row: ${edge.target.displayRow},
                 column: ${edge.target.displayColumn}
-            });
+            }, 'blue');
         </j:otherwise>
         </j:choose>
     </j:forEach>

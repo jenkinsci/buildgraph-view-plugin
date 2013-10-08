@@ -13,6 +13,9 @@ import java.util.List;
 @Extension(optional = true)
 public class ParameterizedBuildTriggerDownStreamRunDeclarer extends DownStreamRunDeclarer {
 
+    // Force a classloading error if parameterized-trigger plugin isn't available
+    public static final Class clazz = BuildInfoExporterAction.class;
+
     @Override
     public List<Run> getDownStream(Run r) {
         List<Run> runs = new ArrayList<Run>();

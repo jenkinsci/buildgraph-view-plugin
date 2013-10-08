@@ -19,7 +19,7 @@ public class UpstreamCauseDonwStreamRunDeclarer extends DownStreamRunDeclarer {
     @Override
     public List<Run> getDownStream(Run r) {
         Job parent = r.getParent();
-        String name = parent.getName();
+        String name = parent.getFullName();
         List<Run> runs = new ArrayList<Run>();
         if (parent instanceof AbstractProject) {
             // I can't see any reason DependencyGraph require AbstractProject, not Run

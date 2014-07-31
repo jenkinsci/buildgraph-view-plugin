@@ -1,29 +1,32 @@
 package org.jenkinsci.plugins.buildgraphview;
 
-import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.Cause;
 import hudson.model.AbstractBuild;
-import hudson.model.Job;
+import hudson.model.Cause;
 import hudson.model.Run;
-import hudson.util.RunList;
-import jenkins.model.Jenkins;
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.graph.SimpleDirectedGraph;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.SimpleDirectedGraph;
+
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.
  */
 public class BuildGraph implements Action {
 
-    private transient DirectedGraph<BuildExecution, Edge> graph;
+    private DirectedGraph<BuildExecution, Edge> graph;
 
     private BuildExecution start;
 
@@ -49,26 +52,68 @@ public class BuildGraph implements Action {
         return start;
     }
 
-    public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException {
+    public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
+        if(graphExists()) {
+            loadGraph();
+            setupDisplayGrid();
+            return graph;
+        }
         graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
         graph.addVertex(start);
         index = 0;
         computeGraphFrom(start);
         setupDisplayGrid();
+        saveGraph();
         return graph;
     }
 
-    private void computeGraphFrom(BuildExecution b) throws ExecutionException, InterruptedException {
+    private void computeGraphFrom(BuildExecution b) throws ExecutionException, InterruptedException, IOException {
         Run run = b.getBuild();
         for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
                 BuildExecution next = getExecution(r);
-                graph.addVertex(next); // ignore if already added
+                graph.addVertex(next);
                 graph.addEdge(b, next, new Edge(b, next));
                 computeGraphFrom(next);
             }
         }
+    }
+
+    private boolean graphExists() {
+        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
+        return graphFile.exists();
+    }
+
+    private void saveGraph() throws IOException {
+        if(start.getBuild().isBuilding()) {
+            return;
+        }
+        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
+        if(!graphFile.exists()) {
+            graphFile.createNewFile();
+        }
+        FileOutputStream fileStream = new FileOutputStream(graphFile);
+        ObjectOutputStream objectStream = new ObjectOutputStream(fileStream);
+        objectStream.writeObject(graph);
+        objectStream.close();
+    }
+
+    private void loadGraph() throws ClassNotFoundException, IOException {
+        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
+        if(!graphFile.exists()) {
+            return;
+        }
+        FileInputStream fileStream = new FileInputStream(graphFile);
+        ObjectInputStream objectStream = new ObjectInputStream(fileStream);
+        graph = (SimpleDirectedGraph<BuildExecution, Edge>) objectStream.readObject();
+        for (BuildExecution edge : graph.vertexSet()) {
+            if(edge.getFullDisplayName().equals(start.getFullDisplayName())) {
+                start = edge;
+                break;
+            }
+        }
+        objectStream.close();
     }
 
     private BuildExecution getExecution(Run r) {
@@ -126,7 +171,7 @@ public class BuildGraph implements Action {
         return allPaths;
     }
 
-    public static class Edge {
+    public static class Edge implements Serializable {
 
         private BuildExecution source;
         private BuildExecution target;

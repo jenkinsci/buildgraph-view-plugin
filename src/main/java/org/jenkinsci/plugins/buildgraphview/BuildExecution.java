@@ -1,19 +1,43 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import hudson.model.BallColor;
 import hudson.model.Run;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 
 /**
  * A wrapper on a AbstractBuild that maintains additional layout information, used during graphical rendering.
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class BuildExecution {
+public class BuildExecution implements Serializable {
 
     private transient Run build;
 
     // A unique number that identifies when in the FlowAbstractBuild this job was started
     private final int buildIndex;
+
+    private String id;
+
+    private String buildUrl;
+
+    private String startTime;
+
+    private String buildName;
+
+    private String buildNumber;
+
+    private BallColor iconColor;
+
+    private String fullDisplayName;
+
+    private String description;
+
+    private boolean building;
+
+    private String durationString;
+
+    private String buildSummaryStatusString;
 
     private int displayColumn;
 
@@ -22,19 +46,63 @@ public class BuildExecution {
     public BuildExecution(Run build, int buildIndex) {
         this.build = build;
         this.buildIndex = buildIndex;
+        this.id = "build-" + buildIndex;
+        this.buildUrl = this.build != null ? this.build.getAbsoluteUrl() : null;
+        this.startTime = isStarted() ? DateFormat.getDateTimeInstance(
+                DateFormat.SHORT, DateFormat.SHORT).format(build.getTime())
+                : "";
+        this.buildName = build.getParent().getName();
+        this.buildNumber = "" + build.number;
+        this.iconColor = build.getIconColor();
+        this.fullDisplayName = build.getFullDisplayName();
+        this.description = build.getDescription();
+        this.building = build.isBuilding();
+        this.durationString = build.getDurationString();
+        this.buildSummaryStatusString = build.getBuildStatusSummary().message;
+    }
+
+    public BuildExecution(int buildIndex) {
+        this.buildIndex = buildIndex;
+    }
+
+    public BallColor getIconColor() {
+        return iconColor;
+    }
+
+    public String getFullDisplayName() {
+        return fullDisplayName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean getBuilding() {
+        return building;
+    }
+
+    public String getDurationString() {
+        return durationString;
+    }
+
+    public String getbuildSummaryStatusString() {
+        return buildSummaryStatusString;
     }
 
     public String getId() {
-        return "build-" + buildIndex;
+        return id;
     }
 
     public String getBuildUrl() {
-        return this.build != null ? this.build.getAbsoluteUrl() : null;
+        return buildUrl;
     }
 
     public String getStartTime() {
+        if(build == null) {
+            return startTime;
+        }
         if (isStarted()) {
-            return DateFormat.getDateTimeInstance(
+            return startTime = DateFormat.getDateTimeInstance(
                     DateFormat.SHORT,
                     DateFormat.SHORT)
                     .format(build.getTime());
@@ -43,7 +111,7 @@ public class BuildExecution {
     }
 
     public boolean isStarted() {
-        return build.getTime() != null;
+        return build != null ? build.getTime() != null : true;
     }
 
     public Run<?,?> getBuild() {
@@ -71,7 +139,7 @@ public class BuildExecution {
     }
 
     public String toString() {
-        return (build != null ? build.getParent().getName() + " #" + build.number : "");
+        return (buildName != null && buildNumber != null ? buildName + " #" + buildNumber : "");
     }
 
     @Override
@@ -84,6 +152,9 @@ public class BuildExecution {
 
     @Override
     public int hashCode() {
-        return build.hashCode();
+        if (build != null) {
+            return build.hashCode();
+        }
+        return super.hashCode();
     }
 }

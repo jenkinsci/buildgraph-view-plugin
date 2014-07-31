@@ -9,6 +9,11 @@
     <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jquery.jsPlumb-1.3.16-all-min.js"></script>
 
     <style type="text/css">
+
+    #flow {
+        margin: 0;
+        list-style-type: none;
+    }
     .column-wrapper {
         margin: 20px;
         display: inline-block;
@@ -99,6 +104,15 @@ function groupBuildsByColumn() {
     });
 }
 
+function resetFlowWidth() {
+    // calculate and set the total width of all columns
+    var width = 0;
+    $('.column-wrapper').each(function(index, column) {
+        width += $(column).outerWidth(true);
+    });
+    $('#flow').width(width + ($('.column-wrapper').length * 5));
+}
+
 // creates a connection between 2 jobs that aren't in consecutive columns
 // by placing placeholder connectors in the columns between the 2 jobs
 function connectJobs(source, target, color) {
@@ -162,6 +176,8 @@ jsPlumb.ready(function() {
     });
     
     groupBuildsByColumn();
+    
+    resetFlowWidth();
     
     jsPlumb.addEndpoint(
         <j:forEach var="vertex" items="${graph.vertexSet()}" varStatus="loop">

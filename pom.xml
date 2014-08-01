@@ -42,6 +42,14 @@
       <version>2.18</version>
       <optional>true</optional>
     </dependency>
+
+    <dependency>
+      <groupId>com.cloudbees.plugins</groupId>
+      <artifactId>build-flow-plugin</artifactId>
+      <version>0.13-SNAPSHOT</version>
+      <optional>false</optional>
+    </dependency>
+
   </dependencies>
   
   <repositories>

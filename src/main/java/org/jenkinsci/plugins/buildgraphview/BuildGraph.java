@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import com.cloudbees.plugins.flow.DownStreamRunDeclarer;
+import com.cloudbees.plugins.flow.FlowCause;
 
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.
@@ -55,20 +56,27 @@ public class BuildGraph implements Action {
         graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
         graph.addVertex(start);
         index = 0;
-        computeGraphFrom(start);
+        computeGraphFrom(start, start);
         setupDisplayGrid();
         return graph;
     }
 
-    private void computeGraphFrom(BuildExecution b) throws ExecutionException, InterruptedException {
+    private void computeGraphFrom(BuildExecution b, buildExecution fromNode) throws ExecutionException, InterruptedException {
         Run run = b.getBuild();
         for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
+                FlowCause cause = (FlowCause) r.getCause(FlowCause.class);
                 BuildExecution next = getExecution(r);
-                graph.addVertex(next); // ignore if already added
-                graph.addEdge(b, next, new Edge(b, next));
-                computeGraphFrom(next);
+                // If Cause is Start. Should probably not be done by comparing
+                // their toString(). But Run.equals is inherited from Object.
+                if (start.getBuild().toString().equals(cause.getFlowRun().toString())) {
+                    graph.addVertex(next); // ignore if already added
+                    graph.addEdge(fromNode, next, new Edge(fromNode, next));
+                    computeGraphFrom(next, next);
+                } else {
+                    computeGraphFrom(next, fromNode);
+                }
             }
         }
     }

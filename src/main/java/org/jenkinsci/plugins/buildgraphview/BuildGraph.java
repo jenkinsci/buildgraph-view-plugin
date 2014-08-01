@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
+import com.cloudbees.plugins.flow.DownStreamRunDeclarer;
 
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.

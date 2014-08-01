@@ -10,6 +10,8 @@ import jenkins.model.Jenkins;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cloudbees.plugins.flow.DownStreamRunDeclarer;
+
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */

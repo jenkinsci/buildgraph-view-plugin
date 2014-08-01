@@ -18,6 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import com.cloudbees.plugins.flow.DownStreamRunDeclarer;
+
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.
  */

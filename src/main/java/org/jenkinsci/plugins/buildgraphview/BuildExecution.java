@@ -21,11 +21,11 @@ public class BuildExecution {
     private final int buildIndex;
 
     private int displayColumn;
-    
+
     private String promoString = "";
-    
+
     private int displayRow;
-    
+
     public boolean causedByPromotion = false;
     public BuildExecution(Run build, int buildIndex) {
         this.build = build;

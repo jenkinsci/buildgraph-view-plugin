@@ -2,6 +2,11 @@ package org.jenkinsci.plugins.buildgraphview;
 
 import hudson.model.Run;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 
 /**
@@ -16,9 +21,9 @@ public class BuildExecution {
     private final int buildIndex;
 
     private int displayColumn;
-
+    private String promoString = "";
     private int displayRow;
-
+    public boolean causedByPromotion = false;
     public BuildExecution(Run build, int buildIndex) {
         this.build = build;
         this.buildIndex = buildIndex;
@@ -34,16 +39,48 @@ public class BuildExecution {
 
     public String getStartTime() {
         if (isStarted()) {
-            return DateFormat.getDateTimeInstance(
-                    DateFormat.SHORT,
-                    DateFormat.SHORT)
-                    .format(build.getTime());
+        	String dateAndPromotion = "";
+        	dateAndPromotion+= DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT).format(build.getTime());
+        	dateAndPromotion+=this.promoString;
+            return dateAndPromotion;
         }
         return "";
     }
 
     public boolean isStarted() {
         return build.getTime() != null;
+    }
+    
+    public void setPromoString(){
+    	
+    	String url = this.build.getAbsoluteUrl()+"/injectedEnvVars/export";
+		try{
+			URL buildUrl = new URL(url);
+			InputStreamReader isr = new InputStreamReader(buildUrl.openStream());
+			BufferedReader br = new BufferedReader(isr);
+			String line;
+			String jobName = "";
+			String jobNum = "";
+			while((line = br.readLine()) != null){
+				int colonIndex = line.indexOf('=');
+				String key = line.substring(0,colonIndex);
+				String val = line.substring(colonIndex+1,line.length());
+				if(key.contains("BUILDGRAPH_PARENT_NAME")){
+					jobName = val;
+				}else if(key.contains("BUILDGRAPH_PARENT_NUMBER")){
+					jobNum = val;
+				}
+			}
+			if((jobName != "") && (jobNum != "")){
+				this.causedByPromotion = true;
+				this.promoString += " : due to promotion on " + jobName + " #" + jobNum;
+			}
+			br.close();
+		}
+		catch (IOException e){
+			e.printStackTrace();
+		}
+    	
     }
 
     public Run<?,?> getBuild() {

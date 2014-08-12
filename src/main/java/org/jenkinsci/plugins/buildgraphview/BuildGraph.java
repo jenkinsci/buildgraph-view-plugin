@@ -55,6 +55,9 @@ public class BuildGraph implements Action {
         index = 0;
         computeGraphFrom(start);
         setupDisplayGrid();
+        for(BuildExecution be : graph.vertexSet()){
+        	be.setPromoString();
+        }
         return graph;
     }
 

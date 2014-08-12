@@ -6,10 +6,19 @@
         data-column="${it.displayColumn}"
         data-row="${it.displayRow}"
         >
-
-        <div class="title" style="background-color: ${it.build.iconColor.htmlBaseColor}; background-image:linear-gradient(${it.build.iconColor.htmlBaseColor}, white);">
-            <a href="${it.buildUrl}">${it.build.fullDisplayName}</a>
-        </div>
+		
+		
+		<j:if test="${it.causedByPromotion}">
+				<div class ="title" style="background-color: ${it.build.iconColor.htmlBaseColor}; background-image:linear-gradient(purple,white);">
+					<a href="${it.buildUrl}">${it.build.fullDisplayName}</a>
+				</div>
+		</j:if>
+		<j:if test="${!it.causedByPromotion}">
+				<div class ="title" style="background-color: ${it.build.iconColor.htmlBaseColor}; background-image:linear-gradient(${it.build.iconColor.htmlBaseColor},white);">
+					<a href="${it.buildUrl}">${it.build.fullDisplayName}</a>
+				</div>
+		</j:if>
+		
         <div class="details">
             <j:if test="${!empty(it.build.description)}">
                 <j:out value="${app.markupFormatter.translate(it.build.description)}" />

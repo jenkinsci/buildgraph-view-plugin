@@ -13,6 +13,7 @@
     #flow {
         margin: 0;
         list-style-type: none;
+        white-space: nowrap;
     }
     .column-wrapper {
         margin: 20px;

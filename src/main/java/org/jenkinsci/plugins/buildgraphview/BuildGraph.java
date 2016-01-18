@@ -72,10 +72,12 @@ public class BuildGraph implements Action {
         for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
-                BuildExecution next = getExecution(r);
-                graph.addVertex(next);
-                graph.addEdge(b, next, new Edge(b, next));
-                computeGraphFrom(next);
+                if (r !=null) {
+                    BuildExecution next = getExecution(r);
+                    graph.addVertex(next);
+                    graph.addEdge(b, next, new Edge(b, next));
+                    computeGraphFrom(next);
+                }
             }
         }
     }
@@ -118,7 +120,12 @@ public class BuildGraph implements Action {
 
     private BuildExecution getExecution(Run r) {
         for (BuildExecution buildExecution : graph.vertexSet()) {
-            if (buildExecution.getBuild().equals(r)) return buildExecution;
+            Run run = buildExecution.getBuild();
+            if(run!=null) {
+                if (run.equals(r)) {
+                    return buildExecution;
+                }
+            }
         }
         return new BuildExecution(r, ++index);
     }

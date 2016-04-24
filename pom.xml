@@ -12,7 +12,14 @@
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Build+Graph+View+Plugin</url>
 
-  <developers>
+    <properties>
+        <maven-release-plugin.version>2.5.1</maven-release-plugin.version>
+        <maven-hpi-plugin.version>1.112</maven-hpi-plugin.version>
+        <maven-deploy-plugin.version>2.6</maven-deploy-plugin.version>
+        <wagon-http.version>2.10</wagon-http.version>
+    </properties>
+
+    <developers>
     <developer>
       <id>ndeloof</id>
       <name>Nicolas De Loof</name>
@@ -20,6 +27,10 @@
     <developer>
       <id>gregory144</id>
       <name>Greg Gross</name>
+    </developer>
+    <developer>
+        <id>pskumar448</id>
+        <name>Suresh Kumar</name>
     </developer>
   </developers>
 
@@ -61,6 +72,16 @@
         <artifactId>promoted-builds</artifactId>
         <version>2.17</version>
         <optional>true</optional>
+        <exclusions>
+            <exclusion>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.sonatype.sisu</groupId>
+                <artifactId>sisu-guice</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
 
       <dependency>
@@ -71,6 +92,53 @@
       </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <version>${maven-hpi-plugin.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-taglib-interface</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven-release-plugin.version}</version>
+        <configuration>
+          <goals>deploy</goals>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>${maven-deploy-plugin.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.wagon</groupId>
+            <artifactId>wagon-http</artifactId>
+            <version>${wagon-http.version}</version>
+            <type>jar</type>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
+    <distributionManagement>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/releases/</url>
+        </repository>
+    </distributionManagement>
 
   <repositories>
     <repository>

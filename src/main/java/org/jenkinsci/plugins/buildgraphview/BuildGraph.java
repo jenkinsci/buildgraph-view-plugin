@@ -53,17 +53,11 @@ public class BuildGraph implements Action {
     }
 
     public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
-        if(graphExists()) {
-            loadGraph();
-            setupDisplayGrid();
-            return graph;
-        }
         graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
         graph.addVertex(start);
         index = 0;
         computeGraphFrom(start);
         setupDisplayGrid();
-        saveGraph();
         return graph;
     }
 
@@ -78,42 +72,6 @@ public class BuildGraph implements Action {
                 computeGraphFrom(next);
             }
         }
-    }
-
-    private boolean graphExists() {
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        return graphFile.exists();
-    }
-
-    private void saveGraph() throws IOException {
-        if(start.getBuild().isBuilding()) {
-            return;
-        }
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        if(!graphFile.exists()) {
-            graphFile.createNewFile();
-        }
-        FileOutputStream fileStream = new FileOutputStream(graphFile);
-        ObjectOutputStream objectStream = new ObjectOutputStream(fileStream);
-        objectStream.writeObject(graph);
-        objectStream.close();
-    }
-
-    private void loadGraph() throws ClassNotFoundException, IOException {
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        if(!graphFile.exists()) {
-            return;
-        }
-        FileInputStream fileStream = new FileInputStream(graphFile);
-        ObjectInputStream objectStream = new ObjectInputStream(fileStream);
-        graph = (SimpleDirectedGraph<BuildExecution, Edge>) objectStream.readObject();
-        for (BuildExecution edge : graph.vertexSet()) {
-            if(edge.getFullDisplayName().equals(start.getFullDisplayName())) {
-                start = edge;
-                break;
-            }
-        }
-        objectStream.close();
     }
 
     private BuildExecution getExecution(Run r) {

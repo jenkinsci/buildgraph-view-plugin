@@ -15,6 +15,7 @@
         margin: 0;
         list-style-type: none;
         white-space: nowrap;
+        display: block;
     }
     .column-wrapper {
         margin: 20px;
@@ -27,6 +28,8 @@
         border-radius: 4px;
         box-shadow: 2px 2px 5px black;
         font-size: 1em;
+        min-width: 180px;
+        min-height: 120px;
     }
 
     .build .title {
@@ -59,22 +62,40 @@
         margin-top: 10px;
         float: right;
     }
+
+    table.progress-bar {
+      border-collapse: collapse;
+      border: 1px solid #3465a4;
+      height: 6px;
+      width: 100px;
+      clear: none;
+    }
+
+    td.progress-bar-done {
+      background-color: #3465a4;
+    }
+
+    td.progress-bar-left {
+      background-color: #ffffff;
+    }
+
+    table.progress-bar.red {
+      border: 1px solid #cc0000;
+    }
+
+    table.progress-bar.red td.progress-bar-done {
+      background-color: #cc0000;
+    }
     </style>
 
-    <j:set var="graph" value="${it.graph}"/>
-    <j:if test="${not empty graph.outgoingEdgesOf(it.start)}">
+    <div style="display:none;" id="buildSteps"></div>
+    <ul id="flow"></ul>
 
-        <j:forEach var="vertex" items="${graph.vertexSet()}">
-            <st:include page="build-step.jelly" it="${vertex}"/>
-        </j:forEach>
-
-        <ul id="flow"></ul>
-
-        <div id="connector-template" class="connector">
-            <div class="left"></div>
-            <div class="right"></div>
-            <div class="cfix"></div>
-        </div>
+    <div id="connector-template" class="connector">
+        <div class="left"></div>
+        <div class="right"></div>
+        <div class="cfix"></div>
+    </div>
 
 <script type="text/javascript">
 <![CDATA[ // put in CDATA so jelly doesn't complain about certain characters (i.e. $, <, >)
@@ -164,67 +185,88 @@ jQuery(window).resize(function(){
       jsPlumb.repaintEverything();
 });
 
-]]>
-</script>
-
-<script type="text/javascript">
-
-jsPlumb.ready(function() {
+function getGraph(endPoints, connectors) {
     jsPlumb.importDefaults({
         PaintStyle: { lineWidth: 2, strokeStyle: "#666" },
         Connector: [ "Straight" ],
         Endpoint: [ "Dot", { radius: 1 } ],
         Anchor: ["RightMiddle", "LeftMiddle"]
     });
-    
+
     groupBuildsByColumn();
-    
     resetFlowWidth();
-    
+
     jsPlumb.addEndpoint(
-        <j:forEach var="vertex" items="${graph.vertexSet()}" varStatus="loop">
-            '${vertex.id}'
-            <j:if test="${!loop.last}">,</j:if>
-        </j:forEach>
+       eval(endPoints)
     );
 
-    <j:forEach var="edge" items="${graph.edgeSet()}" varStatus="status">
-        <j:choose>
-        <j:when test="${edge.source.displayColumn + 1 eq edge.target.displayColumn}">
+    var aconnectors = connectors.split(":");
+    for(i=0; i< aconnectors.length; i++)
+    {
+        var connector = eval(aconnectors[i]);
+        if(connector != undefined)
+        {
+        if(connector[2] + 1 == connector[4])
+        {
             jsPlumb.connect({
-                source:"${edge.source.id}", 
-                target:"${edge.target.id}",
-                overlays: [[ "Arrow", {
-                    location: 1,
-                    id: "arrow",
-                    length: 7,
-                    width: 7
-                }]],
-                paintStyle:{ strokeStyle: 'grey', lineWidth: '2' }
-            });
-        </j:when>
-        <j:otherwise>
+                            source:connector[0],
+                            target:connector[1],
+                            overlays: [[ "Arrow", {
+                                location: 1,
+                                id: "arrow",
+                                length: 7,
+                                width: 7
+                            }]],
+                            paintStyle:{ strokeStyle: 'grey', lineWidth: '2' }
+                        });
+        }
+        else
+        {
             connectJobs({
-                id: "${edge.source.id}",
-                row: ${edge.source.displayRow},
-                column: ${edge.source.displayColumn}
-            }, {
-                id: "${edge.target.id}", 
-                row: ${edge.target.displayRow},
-                column: ${edge.target.displayColumn}
-            }, 'blue');
-        </j:otherwise>
-        </j:choose>
-    </j:forEach>
+                            id: connector[0],
+                            row: connector[3],
+                            column: connector[2]
+                        }, {
+                            id: connector[1],
+                            row: connector[5],
+                            column: connector[4]
+                        }, 'blue');
+        }
+        }
+    }
 
     sortConnectors();
 
     jsPlumb.repaintEverything();
-});
+}
 
+function getData() {
+jQuery.ajax({
+            url: '${it.buildUrl}' + '/BuildGraph/api/json',
+            dataType: 'json',
+            async: true,
+            cache: false,
+            timeout: 20000,
+            success: function (data) {
+                jQuery("#buildSteps").html(data.buildSteps);
+                $flow.html("");
+                getGraph(data.endPoints, data.connectors);
+                setTimeout(function () { getData(); }, 2000);
+            },
+             error: function (xhr, status, error) {
+                 setTimeout(function () { getData(); }, 2000);
+             }
+        });
+}
+]]>
 </script>
 
-    </j:if>
+<script type="text/javascript">
+jsPlumb.ready(function()
+{
+    getData();
+});
+</script>
 
     </l:main-panel>
   </l:layout>

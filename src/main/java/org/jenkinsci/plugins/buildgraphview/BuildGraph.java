@@ -1,16 +1,9 @@
 package org.jenkinsci.plugins.buildgraphview;
 
-import hudson.model.Action;
-import hudson.model.AbstractBuild;
-import hudson.model.Cause;
-import hudson.model.Run;
+import hudson.model.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,12 +11,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import jenkins.model.Jenkins;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
+import static java.lang.Math.round;
+import static java.lang.System.currentTimeMillis;
 
 /**
  * Compute the graph of related builds, based on {@link Cause.UpstreamCause}.
  */
+@ExportedBean
 public class BuildGraph implements Action {
 
     private DirectedGraph<BuildExecution, Edge> graph;
@@ -52,18 +52,23 @@ public class BuildGraph implements Action {
         return start;
     }
 
+    public String getBuildUrl()
+    {
+        return start.getBuildUrl();
+    }
+
+    public Api getApi() {
+        return new BuildGraphApi(this);
+    }
+
     public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
-        if(graphExists()) {
-            loadGraph();
+        if(graph == null) {
+            graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
+            graph.addVertex(start);
+            index = 0;
+            computeGraphFrom(start);
             setupDisplayGrid();
-            return graph;
         }
-        graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
-        graph.addVertex(start);
-        index = 0;
-        computeGraphFrom(start);
-        setupDisplayGrid();
-        saveGraph();
         return graph;
     }
 
@@ -72,48 +77,14 @@ public class BuildGraph implements Action {
         for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
-                BuildExecution next = getExecution(r);
-                graph.addVertex(next);
-                graph.addEdge(b, next, new Edge(b, next));
-                computeGraphFrom(next);
+                if(r != null) {
+                    BuildExecution next = getExecution(r);
+                    graph.addVertex(next);
+                    graph.addEdge(b, next, new Edge(b, next));
+                    computeGraphFrom(next);
+                }
             }
         }
-    }
-
-    private boolean graphExists() {
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        return graphFile.exists();
-    }
-
-    private void saveGraph() throws IOException {
-        if(start.getBuild().isBuilding()) {
-            return;
-        }
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        if(!graphFile.exists()) {
-            graphFile.createNewFile();
-        }
-        FileOutputStream fileStream = new FileOutputStream(graphFile);
-        ObjectOutputStream objectStream = new ObjectOutputStream(fileStream);
-        objectStream.writeObject(graph);
-        objectStream.close();
-    }
-
-    private void loadGraph() throws ClassNotFoundException, IOException {
-        File graphFile = new File(start.getBuild().getRootDir(), "buildflow-graph");
-        if(!graphFile.exists()) {
-            return;
-        }
-        FileInputStream fileStream = new FileInputStream(graphFile);
-        ObjectInputStream objectStream = new ObjectInputStream(fileStream);
-        graph = (SimpleDirectedGraph<BuildExecution, Edge>) objectStream.readObject();
-        for (BuildExecution edge : graph.vertexSet()) {
-            if(edge.getFullDisplayName().equals(start.getFullDisplayName())) {
-                start = edge;
-                break;
-            }
-        }
-        objectStream.close();
     }
 
     private BuildExecution getExecution(Run r) {
@@ -169,6 +140,107 @@ public class BuildGraph implements Action {
             }
         }
         return allPaths;
+    }
+
+    @Exported
+    public String getBuildSteps() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
+    {
+        DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
+        StringBuilder sb = new StringBuilder();
+        for(BuildExecution item : iGraph.vertexSet())
+        {
+            sb.append("<div class=\"build\" id=\"" + item.getId() + "\" data-column=\"" + item.getDisplayColumn() + "\" data-row=\"" + item.getDisplayRow() + "\" >");
+                sb.append("<div ");
+                sb.append("class=\"title\" ");
+                sb.append("style=\"background-color: " + item.getIconColor().getHtmlBaseColor() + "; ");
+                sb.append("background-image:linear-gradient(" + item.getIconColor().getHtmlBaseColor() + ", white);\">");
+                    sb.append("<a href=\"" + item.getBuildUrl() + "\">" + item.getFullDisplayName() + "</a>");
+                sb.append("</div>");
+                sb.append("<div class=\"details\">");
+                if(item.getDescription() != null)
+                {
+                    sb.append(item.getDescription());
+                }
+                if(item.isStarted())
+                {
+                    if(item.getBuilding())
+                    {
+                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() +"/images/16x16/clock.png\"/>" + item.getBuild().getTimestampString() + "ago<br/>");
+                        if(item.getBuild().isBuilding()) {
+                            int progress = (int) round(100.0d * (currentTimeMillis() - item.getBuild().getTimestamp().getTimeInMillis())
+                                    / item.getBuild().getEstimatedDuration());
+                            if (progress > 100) {
+                                progress = 99;
+                            }
+                            sb.append("<br /><br /><table class=\"progress-bar\">");
+                            sb.append("<tbody><tr>");
+                            sb.append("<td class=\"progress-bar-done\" style=\"width:"+ progress +"%;\"/>");
+                            sb.append("<td class=\"progress-bar-left\" style=\"width:" + (100-progress) +"%\"/>");
+                            sb.append("</tr></tbody>");
+                            sb.append("</table>");
+                        }
+                    }
+                    else
+                    {
+                        sb.append("Status: " + item.getbuildSummaryStatusString() + "<br/>");
+                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/clock.png\"/> " + item.getStartTime() + "<br/>");
+                        sb.append("<img title=\"Duration\" alt=\"Duration\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/hourglass.png\"/> " + item.getDurationString() + "<br/>");
+                    }
+                    sb.append("<br/>");
+                    sb.append("<a href=\"" + item.getBuildUrl() + "console\"><img title=\"view console output\" alt=\"console\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/terminal.png\"/></a>");
+                }
+                else
+                {
+                    sb.append("Scheduled");
+                }
+                sb.append("</div>");
+            sb.append("</div>");
+        }
+        return sb.toString();
+    }
+
+    @Exported
+    public  String getEndPoints()  throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
+        String sep = "";
+        for(BuildExecution item : iGraph.vertexSet())
+        {
+            sb.append(sep);
+            sb.append("'");
+            sb.append(item.getId());
+            sb.append("'");
+            sep = ",";
+        }
+        return sb.toString();
+    }
+
+    @Exported
+    public String getConnectors() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
+        String sep = "";
+        for(Edge edge : iGraph.edgeSet())
+        {
+            sb.append(sep);
+            sb.append("[");
+            sb.append("'" + edge.getSource().getId() + "'");
+            sb.append(",");
+            sb.append("'" + edge.getTarget().getId() + "'");
+            sb.append(",");
+            sb.append(edge.getSource().getDisplayColumn());
+            sb.append(",");
+            sb.append(edge.getSource().getDisplayRow());
+            sb.append(",");
+            sb.append(edge.getTarget().getDisplayColumn());
+            sb.append(",");
+            sb.append(edge.getTarget().getDisplayRow());
+            sb.append("]");
+            sep = ":";
+        }
+        return sb.toString();
     }
 
     public static class Edge implements Serializable {

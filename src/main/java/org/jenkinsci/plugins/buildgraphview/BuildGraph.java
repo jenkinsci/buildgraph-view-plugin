@@ -165,7 +165,7 @@ public class BuildGraph implements Action {
                 {
                     if(item.getBuilding())
                     {
-                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() +"/images/16x16/clock.png\"/>" + item.getBuild().getTimestampString() + "ago<br/>");
+                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() +"/images/16x16/clock.png\"/>" + item.getBuild().getTimestampString() + " ago<br/>");
                         if(item.getBuild().isBuilding()) {
                             int progress = (int) round(100.0d * (currentTimeMillis() - item.getBuild().getTimestamp().getTimeInMillis())
                                     / item.getBuild().getEstimatedDuration());

@@ -160,6 +160,7 @@ public class BuildGraph implements Action {
                 if(item.getDescription() != null)
                 {
                     sb.append(item.getDescription());
+                    sb.append("<br/>");
                 }
                 if(item.isStarted())
                 {

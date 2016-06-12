@@ -32,6 +32,8 @@ public class BuildGraph implements Action {
 
     private transient int index = 0;
 
+    private boolean isBuildInProgress = false;
+
     public BuildGraph(AbstractBuild run) {
         this.start = new BuildExecution(run, 0);
     }
@@ -60,6 +62,9 @@ public class BuildGraph implements Action {
     public Api getApi() {
         return new BuildGraphApi(this);
     }
+
+    @Exported
+    public boolean getIsBuildInProgress() { return isBuildInProgress; }
 
     public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         if(graph == null) {
@@ -166,6 +171,7 @@ public class BuildGraph implements Action {
                 {
                     if(item.getBuilding())
                     {
+                        isBuildInProgress = true;
                         sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() +"/images/16x16/clock.png\"/>" + item.getBuild().getTimestampString() + " ago<br/>");
                         if(item.getBuild().isBuilding()) {
                             int progress = (int) round(100.0d * (currentTimeMillis() - item.getBuild().getTimestamp().getTimeInMillis())

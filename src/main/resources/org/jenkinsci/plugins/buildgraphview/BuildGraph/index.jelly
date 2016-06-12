@@ -239,7 +239,7 @@ function getGraph(endPoints, connectors) {
 
     jsPlumb.repaintEverything();
 }
-
+var lastBuildSteps;
 function getData() {
 jQuery.ajax({
             url: '${it.buildUrl}' + '/BuildGraph/api/json',
@@ -249,12 +249,15 @@ jQuery.ajax({
             timeout: 20000,
             success: function (data) {
                 jQuery("#buildSteps").html(data.buildSteps);
-                $flow.html("");
-                getGraph(data.endPoints, data.connectors);
-                setTimeout(function () { getData(); }, 2000);
+                if(data.isBuildInProgress || jQuery("#buildSteps .build").length != lastBuildSteps) {
+                    lastBuildSteps = jQuery("#buildSteps .build").length;
+                    $flow.empty();
+                    getGraph(data.endPoints, data.connectors);
+                }
+                setTimeout(function () { getData(); }, 10000);
             },
              error: function (xhr, status, error) {
-                 setTimeout(function () { getData(); }, 2000);
+                 setTimeout(function () { getData(); }, 10000);
              }
         });
 }

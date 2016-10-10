@@ -1,0 +1,46 @@
+<ul class="flow">
+    <li class="column-wrapper" ng-repeat="columns in buildGraphViewModel.nodes">
+        <div ng-repeat="node in columns.nodes | orderBy:'row'">
+            <div class="build" id="{{node.nodeId}}" data-column="node.column" data-row="node.row">
+                <div class="title"
+                     style="background-color:{{node.color}}; background-image:linear-gradient({{node.color}}, white);">
+                    <a href="{{node.buildUrl}}">{{node.title}}</a>
+                </div>
+                <div class="details">
+                    <div ng-show="node.started == true && node.running == false">
+                        {{node.description}}
+                        <br/>
+                        Status: {{node.status}}
+                        <br/>
+                        <img title="Started" alt="Started" ng-src="{{node.clockpng}}"/>
+                        {{node.startTime}}
+                        <br/>
+                        <img title="Duration" alt="Duration" ng-src="{{node.hourglasspng}}"/>
+                        {{node.duration}}
+                        <br/>
+                        <a href="{{node.buildUrl}}console">
+                            <img title="view console output" alt="console"
+                                 ng-src="{{node.terminalpng}}"/>
+                        </a>
+                    </div>
+                    <div ng-show="node.started == true && node.running == true">
+                        <img title="Started" alt="Started" ng-src="{{node.clockpng}}"/>{{node.timeStampString}} ago<br/>
+                        <br/>
+                        <br/>
+                        <table class="progress-bar">
+                            <tbody>
+                            <tr>
+                                <td class="progress-bar-done" style="width:{{node.progress}}%;"></td>
+                                <td class="progress-bar-left" style="width:{{100-node.progress}}%"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-show="node.started == false && node.running == false">
+                        Scheduled
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+</ul>

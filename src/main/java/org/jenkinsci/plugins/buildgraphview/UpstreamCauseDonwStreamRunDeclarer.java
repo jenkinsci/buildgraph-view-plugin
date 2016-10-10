@@ -23,7 +23,7 @@ public class UpstreamCauseDonwStreamRunDeclarer extends DownStreamRunDeclarer {
         List<Run> runs = new ArrayList<Run>();
         if (parent instanceof AbstractProject) {
             // I can't see any reason DependencyGraph require AbstractProject, not Run
-            List<AbstractProject> jobs = Jenkins.getInstance().getDependencyGraph().getDownstream((AbstractProject) parent);
+            List<AbstractProject> jobs = JenkinsUtil.getInstance().getDependencyGraph().getDownstream((AbstractProject) parent);
             for (Job job : jobs) {
                 List<Run> builds = job.getBuilds();
                 for (Run b : builds) {

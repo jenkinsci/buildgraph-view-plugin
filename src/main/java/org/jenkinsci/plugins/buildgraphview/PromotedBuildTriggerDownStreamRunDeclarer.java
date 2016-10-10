@@ -23,8 +23,6 @@ public class PromotedBuildTriggerDownStreamRunDeclarer extends DownStreamRunDecl
 
     @Override
     public List<Run> getDownStream(Run r) {
-        Job parent = r.getParent();
-        String name = parent.getFullName();
         List<Run> runs = new ArrayList<Run>();
         List<AbstractProject> result = new ArrayList<AbstractProject>();
         DependencyGraph graph = new DependencyGraph();

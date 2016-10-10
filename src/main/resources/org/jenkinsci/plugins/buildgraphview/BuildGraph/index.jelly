@@ -1,276 +1,107 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson">
-    <l:layout norefresh="true">
-    <st:include page="sidepanel.jelly" it="${it.start.build}"/>
-    <l:main-panel>
+    <l:layout norefresh="true" title="BuildGraph">
+        <st:include page="sidepanel.jelly" it="${it.start.build}"/>
+        <l:main-panel>
 
-    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery.min.js'></script>
-    <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery-ui.min.js'></script>
-    <script type="text/javascript" src="${resURL}/plugin/buildgraph-view/scripts/jquery.jsPlumb-1.3.16-all-min.js"></script>
-    <script>jQuery.noConflict();</script>
+            <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery.min.js'></script>
+            <script type='text/javascript' src='${resURL}/plugin/buildgraph-view/scripts/jquery-ui.min.js'></script>
+            <script type="text/javascript"
+                    src="${resURL}/plugin/buildgraph-view/scripts/jquery.jsPlumb-1.3.16-all-min.js"></script>
+            <script type="text/javascript" src='${resURL}/plugin/buildgraph-view/scripts/angularjs.js'></script>
 
-    <style type="text/css">
+            <script>jQuery.noConflict();</script>
 
-    #flow {
-        margin: 0;
-        list-style-type: none;
-        white-space: nowrap;
-        display: block;
-    }
-    .column-wrapper {
-        margin: 20px;
-        display: inline-block;
-        vertical-align: top;
-    }
-    .build {
-        margin: 10px;
-        border:solid 1px black;
-        border-radius: 4px;
-        box-shadow: 2px 2px 5px black;
-        font-size: 1em;
-        min-width: 180px;
-        min-height: 120px;
-    }
+            <style type="text/css">
 
-    .build .title {
-        border-radius: 4px 4px 0 0;
-        padding: 4px;
-        border-bottom: 1px solid black;
-        text-align:center;
-        font-size: 1em;
-        font-weight: bold;
-    }
-
-    .build .details {
-        min-height: 40px;
-        padding: 4px;
-    }
-    .build .details .status font {
-        /* override the default color (can be red on failure) */
-        color: black;
-    }
-
-    .connector {
-        margin: 10px;
-        height: 20px;
-    }
-    .connector .left {
-        margin-top: 10px;
-        float: left;
-    }
-    .connector .right {
-        margin-top: 10px;
-        float: right;
-    }
-
-    table.progress-bar {
-      border-collapse: collapse;
-      border: 1px solid #3465a4;
-      height: 6px;
-      width: 100px;
-      clear: none;
-    }
-
-    td.progress-bar-done {
-      background-color: #3465a4;
-    }
-
-    td.progress-bar-left {
-      background-color: #ffffff;
-    }
-
-    table.progress-bar.red {
-      border: 1px solid #cc0000;
-    }
-
-    table.progress-bar.red td.progress-bar-done {
-      background-color: #cc0000;
-    }
-    </style>
-
-    <div style="display:none;" id="buildSteps"></div>
-    <ul id="flow"></ul>
-
-    <div id="connector-template" class="connector">
-        <div class="left"></div>
-        <div class="right"></div>
-        <div class="cfix"></div>
-    </div>
-
-<script type="text/javascript">
-<![CDATA[ // put in CDATA so jelly doesn't complain about certain characters (i.e. $, <, >)
-
-var $flow = jQuery('ul#flow');
-
-function groupBuildsByColumn() {
-    jQuery('.build').each(function(index, build) {
-        var $build = jQuery(build)
-        // place it in it's respective columns
-        var column = $build.data('column');
-        // create the column wrapper if it doesn't already exist
-        while ($flow.find('li').length <= column) {
-            $flow.append('<li></li>');
-        }
-        $build.remove();
-        var $listItems = $flow.find('li');
-        jQuery($listItems.get(column)).append(build);
-        $listItems.addClass('column-wrapper');
-    });
-
-    // sort each column's builds by row
-    jQuery('.column-wrapper').each(function(index, column) {
-        var buildsInColumn = jQuery('.build', column).sort(function(a, b) {
-            return jQuery(a).data('row') > jQuery(b).data('row');
-        });
-        jQuery(buildsInColumn).remove();
-        jQuery(column).append(buildsInColumn);
-    });
-}
-
-function resetFlowWidth() {
-    // calculate and set the total width of all columns
-    var width = 0;
-    jQuery('.column-wrapper').each(function(index, column) {
-        width += jQuery(column).outerWidth(true);
-    });
-    jQuery('#flow').width(width + (jQuery('.column-wrapper').length * 5));
-}
-
-// creates a connection between 2 jobs that aren't in consecutive columns
-// by placing placeholder connectors in the columns between the 2 jobs
-function connectJobs(source, target, color) {
-    var lastConnector = source.id;
-    var paintStyle = { strokeStyle: color, lineWidth: '2' };
-    for (var i = source.column; i < target.column - 1; i++) {
-        var connectorId = 'connector-' + source.id + '-' + target.id + '-' + i;
-
-        // create a connector element from the template
-        var $connector = jQuery('#connector-template').clone();
-        $connector.attr('id', connectorId);
-        $connector.data({ source: source });
-
-        // put in connector in the right column
-        jQuery(jQuery('.column-wrapper').get(i+1)).append($connector);
-
-        // draw the lines between the connectors, including between the left
-        // and right sides of the connectors
-        var leftConnector = $connector.find('.left');
-        jsPlumb.connect({source: lastConnector, target: leftConnector, paintStyle: paintStyle });
-        var rightConnector = $connector.find('.right');
-        jsPlumb.connect({source: leftConnector, target: rightConnector, paintStyle: paintStyle });
-        lastConnector = rightConnector;
-    }
-    jsPlumb.connect({source: lastConnector, target: target.id, paintStyle: paintStyle });
-}
-
-// sort the connectors so that the lines don't overlap
-function sortConnectors() {
-    jQuery('.column-wrapper').each(function(index, column) {
-        var connectorsInColumn = jQuery('.connector', column).sort(function(a, b) {
-            var aSource = jQuery(a).data('source');
-            var bSource = jQuery(b).data('source');
-            if (aSource.row === bSource.row) {
-                // use column as a secondary sort key
-                return aSource.column < bSource.column;
-            }
-            // connectors that are connecting higher rows need to be placed
-            return aSource.row > bSource.row;
-        });
-        jQuery(connectorsInColumn).remove();
-        jQuery(column).append(connectorsInColumn);
-    });
-}
-
-jQuery(window).resize(function(){
-      jsPlumb.repaintEverything();
-});
-
-function getGraph(endPoints, connectors) {
-    jsPlumb.importDefaults({
-        PaintStyle: { lineWidth: 2, strokeStyle: "#666" },
-        Connector: [ "Straight" ],
-        Endpoint: [ "Dot", { radius: 1 } ],
-        Anchor: ["RightMiddle", "LeftMiddle"]
-    });
-
-    groupBuildsByColumn();
-    resetFlowWidth();
-
-    jsPlumb.addEndpoint(
-       eval(endPoints)
-    );
-
-    var aconnectors = connectors.split(":");
-    for(i=0; i< aconnectors.length; i++)
-    {
-        var connector = eval(aconnectors[i]);
-        if(connector != undefined)
-        {
-        if(connector[2] + 1 == connector[4])
-        {
-            jsPlumb.connect({
-                            source:connector[0],
-                            target:connector[1],
-                            overlays: [[ "Arrow", {
-                                location: 1,
-                                id: "arrow",
-                                length: 7,
-                                width: 7
-                            }]],
-                            paintStyle:{ strokeStyle: 'grey', lineWidth: '2' }
-                        });
-        }
-        else
-        {
-            connectJobs({
-                            id: connector[0],
-                            row: connector[3],
-                            column: connector[2]
-                        }, {
-                            id: connector[1],
-                            row: connector[5],
-                            column: connector[4]
-                        }, 'blue');
-        }
-        }
-    }
-
-    sortConnectors();
-
-    jsPlumb.repaintEverything();
-}
-var lastBuildSteps;
-function getData() {
-jQuery.ajax({
-            url: '${it.buildUrl}' + '/BuildGraph/api/json',
-            dataType: 'json',
-            async: true,
-            cache: false,
-            timeout: 20000,
-            success: function (data) {
-                jQuery("#buildSteps").html(data.buildSteps);
-                if(data.isBuildInProgress || jQuery("#buildSteps .build").length != lastBuildSteps) {
-                    lastBuildSteps = jQuery("#buildSteps .build").length;
-                    $flow.empty();
-                    getGraph(data.endPoints, data.connectors);
+                #flow, .flow {
+                margin: 0;
+                list-style-type: none;
+                white-space: nowrap;
+                display: block;
                 }
-                setTimeout(function () { getData(); }, 10000);
-            },
-             error: function (xhr, status, error) {
-                 setTimeout(function () { getData(); }, 10000);
-             }
-        });
-}
-]]>
-</script>
+                .column-wrapper {
+                margin: 20px;
+                display: inline-block;
+                vertical-align: top;
+                }
+                .build {
+                margin: 10px;
+                border:solid 1px black;
+                border-radius: 4px;
+                box-shadow: 2px 2px 5px black;
+                font-size: 1em;
+                min-width: 180px;
+                min-height: 120px;
+                }
 
-<script type="text/javascript">
-jsPlumb.ready(function()
-{
-    getData();
-});
-</script>
+                .build .title {
+                border-radius: 4px 4px 0 0;
+                padding: 4px;
+                border-bottom: 1px solid black;
+                text-align:center;
+                font-size: 1em;
+                font-weight: bold;
+                }
 
-    </l:main-panel>
-  </l:layout>
+                .build .details {
+                min-height: 40px;
+                padding: 4px;
+                }
+                .build .details .status font {
+                /* override the default color (can be red on failure) */
+                color: black;
+                }
+
+                .connector {
+                margin: 10px;
+                height: 20px;
+                }
+                .connector .left {
+                margin-top: 10px;
+                float: left;
+                }
+                .connector .right {
+                margin-top: 10px;
+                float: right;
+                }
+
+                table.progress-bar {
+                border-collapse: collapse;
+                border: 1px solid #3465a4;
+                height: 6px;
+                width: 100px;
+                clear: none;
+                }
+
+                td.progress-bar-done {
+                background-color: #3465a4;
+                }
+
+                td.progress-bar-left {
+                background-color: #ffffff;
+                }
+
+                table.progress-bar.red {
+                border: 1px solid #cc0000;
+                }
+
+                table.progress-bar.red td.progress-bar-done {
+                background-color: #cc0000;
+                }
+            </style>
+
+            <div ng-app="buildgraphapp" ng-controller="BuildGraphAppCtrl" id="buildgraph">
+                <my-build-graph style="margin: 5px; width: 100%; height: 100%;" jenkinsurl="${resURL}">
+                </my-build-graph>
+            </div>
+            <script type="text/javascript">
+                <![CDATA[
+                    var ajaxPath = '${it.buildUrl}' + '/BuildGraph/api/json';
+                ]]>
+            </script>
+            <script type="text/javascript"
+                    src='${resURL}/plugin/buildgraph-view/scripts/buildgraph-appctrl.js'></script>
+        </l:main-panel>
+    </l:layout>
 </j:jelly>

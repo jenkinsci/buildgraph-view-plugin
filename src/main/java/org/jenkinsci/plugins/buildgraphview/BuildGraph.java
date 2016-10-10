@@ -1,17 +1,14 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import com.google.gson.Gson;
 import hudson.model.*;
 
 import java.io.IOException;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import jenkins.model.Jenkins;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
 import org.kohsuke.stapler.export.Exported;
@@ -31,8 +28,6 @@ public class BuildGraph implements Action {
     private BuildExecution start;
 
     private transient int index = 0;
-
-    private boolean isBuildInProgress = false;
 
     public BuildGraph(AbstractBuild run) {
         this.start = new BuildExecution(run, 0);
@@ -63,10 +58,7 @@ public class BuildGraph implements Action {
         return new BuildGraphApi(this);
     }
 
-    @Exported
-    public boolean getIsBuildInProgress() { return isBuildInProgress; }
-
-    public DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
+    private DirectedGraph<BuildExecution, Edge> getGraph() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException {
         if(graph == null) {
             graph = new SimpleDirectedGraph<BuildExecution, Edge>(Edge.class);
             graph.addVertex(start);
@@ -148,106 +140,72 @@ public class BuildGraph implements Action {
     }
 
     @Exported
-    public String getBuildSteps() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
-    {
+    public String getBuildGraph() throws InterruptedException, ExecutionException, ClassNotFoundException, IOException {
         DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
-        StringBuilder sb = new StringBuilder();
-        for(BuildExecution item : iGraph.vertexSet())
-        {
-            sb.append("<div class=\"build\" id=\"" + item.getId() + "\" data-column=\"" + item.getDisplayColumn() + "\" data-row=\"" + item.getDisplayRow() + "\" >");
-                sb.append("<div ");
-                sb.append("class=\"title\" ");
-                sb.append("style=\"background-color: " + item.getIconColor().getHtmlBaseColor() + "; ");
-                sb.append("background-image:linear-gradient(" + item.getIconColor().getHtmlBaseColor() + ", white);\">");
-                    sb.append("<a href=\"" + item.getBuildUrl() + "\">" + item.getFullDisplayName() + "</a>");
-                sb.append("</div>");
-                sb.append("<div class=\"details\">");
-                if(item.getDescription() != null)
-                {
-                    sb.append(item.getDescription());
-                    sb.append("<br/>");
+        BuildGraphModel buildGraphModel = new BuildGraphModel();
+        ArrayList<BuildGraphNodeModel> buildGraphNodeModelArrayList = new ArrayList();
+        ArrayList<BuildGraphConnectorModel> buildGraphConnectorsModelArrayList = new ArrayList();
+        for(BuildExecution item : iGraph.vertexSet()) {
+            BuildGraphNodeModel buildGraphNodeModel = new BuildGraphNodeModel();
+            buildGraphNodeModel.setNodeId(item.getId());
+            buildGraphNodeModel.setBuildUrl(item.getBuildUrl());
+            buildGraphNodeModel.setRow(item.getDisplayRow());
+            buildGraphNodeModel.setColumn(item.getDisplayColumn());
+            buildGraphNodeModel.setColor(item.getIconColor().getHtmlBaseColor());
+            buildGraphNodeModel.setTitle(item.getFullDisplayName());
+            buildGraphNodeModel.setDescription((item.getDescription() != null ? item.getDescription() : ""));
+            buildGraphNodeModel.setStarted(item.isStarted());
+            buildGraphNodeModel.setRunning(item.getBuild().isBuilding());
+            int progress = 0;
+            buildGraphNodeModel.setTimeStampString("");
+            if(item.getBuild().isBuilding()) {
+                progress = (int) round(100.0d * (currentTimeMillis() - item.getBuild().getTimestamp().getTimeInMillis())
+                        / item.getBuild().getEstimatedDuration());
+                if (progress > 100) {
+                    progress = 99;
                 }
-                if(item.isStarted())
-                {
-                    if(item.getBuilding())
-                    {
-                        isBuildInProgress = true;
-                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() +"/images/16x16/clock.png\"/>" + item.getBuild().getTimestampString() + " ago<br/>");
-                        if(item.getBuild().isBuilding()) {
-                            int progress = (int) round(100.0d * (currentTimeMillis() - item.getBuild().getTimestamp().getTimeInMillis())
-                                    / item.getBuild().getEstimatedDuration());
-                            if (progress > 100) {
-                                progress = 99;
-                            }
-                            sb.append("<br /><br /><table class=\"progress-bar\">");
-                            sb.append("<tbody><tr>");
-                            sb.append("<td class=\"progress-bar-done\" style=\"width:"+ progress +"%;\"/>");
-                            sb.append("<td class=\"progress-bar-left\" style=\"width:" + (100-progress) +"%\"/>");
-                            sb.append("</tr></tbody>");
-                            sb.append("</table>");
-                        }
-                    }
-                    else
-                    {
-                        sb.append("Status: " + item.getbuildSummaryStatusString() + "<br/>");
-                        sb.append("<img title=\"Started\" alt=\"Started\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/clock.png\"/> " + item.getStartTime() + "<br/>");
-                        sb.append("<img title=\"Duration\" alt=\"Duration\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/hourglass.png\"/> " + item.getDurationString() + "<br/>");
-                    }
-                    sb.append("<br/>");
-                    sb.append("<a href=\"" + item.getBuildUrl() + "console\"><img title=\"view console output\" alt=\"console\" src=\"" + Jenkins.getInstance().getRootUrl() + "/images/16x16/terminal.png\"/></a>");
-                }
-                else
-                {
-                    sb.append("Scheduled");
-                }
-                sb.append("</div>");
-            sb.append("</div>");
-        }
-        return sb.toString();
-    }
+                buildGraphNodeModel.setTimeStampString(item.getBuild().getTimestampString());
+                buildGraphModel.setBuilding(true);
+            }
+            buildGraphNodeModel.setProgress(progress);
+            buildGraphNodeModel.setStatus(item.getbuildSummaryStatusString());
+            buildGraphNodeModel.setStartTime(item.getStartTime());
+            buildGraphNodeModel.setDuration(item.getDurationString());
+            buildGraphNodeModel.setRootUrl(JenkinsUtil.getInstance().getRootUrl());
+            buildGraphNodeModel.setClockpng(JenkinsUtil.getInstance().getRootUrl() + "/images/16x16/clock.png");
+            buildGraphNodeModel.setHourglasspng(JenkinsUtil.getInstance().getRootUrl() + "/images/16x16/hourglass.png");
+            buildGraphNodeModel.setTerminalpng(JenkinsUtil.getInstance().getRootUrl() + "/images/16x16/terminal.png");
 
-    @Exported
-    public  String getEndPoints()  throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
-    {
-        StringBuilder sb = new StringBuilder();
-        DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
-        String sep = "";
-        for(BuildExecution item : iGraph.vertexSet())
-        {
-            sb.append(sep);
-            sb.append("'");
-            sb.append(item.getId());
-            sb.append("'");
-            sep = ",";
+            buildGraphNodeModelArrayList.add(buildGraphNodeModel);
         }
-        return sb.toString();
-    }
 
-    @Exported
-    public String getConnectors() throws ExecutionException, InterruptedException, ClassNotFoundException, IOException
-    {
-        StringBuilder sb = new StringBuilder();
-        DirectedGraph<BuildExecution, Edge> iGraph = this.getGraph();
-        String sep = "";
-        for(Edge edge : iGraph.edgeSet())
-        {
-            sb.append(sep);
-            sb.append("[");
-            sb.append("'" + edge.getSource().getId() + "'");
-            sb.append(",");
-            sb.append("'" + edge.getTarget().getId() + "'");
-            sb.append(",");
-            sb.append(edge.getSource().getDisplayColumn());
-            sb.append(",");
-            sb.append(edge.getSource().getDisplayRow());
-            sb.append(",");
-            sb.append(edge.getTarget().getDisplayColumn());
-            sb.append(",");
-            sb.append(edge.getTarget().getDisplayRow());
-            sb.append("]");
-            sep = ":";
+
+        ArrayList<BuildGraphColumnsNodeModel> buildGraphColumnsNodeModelArrayList = new ArrayList<BuildGraphColumnsNodeModel>();
+        for(BuildGraphNodeModel node : buildGraphNodeModelArrayList) {
+            if(node.getColumn() >= buildGraphColumnsNodeModelArrayList.size()) {
+                BuildGraphColumnsNodeModel buildGraphColumnsNodeModel = new BuildGraphColumnsNodeModel();
+                ArrayList<BuildGraphNodeModel> buildGraphNodeModels = new ArrayList<BuildGraphNodeModel>();
+                buildGraphNodeModels.add(node);
+                buildGraphColumnsNodeModel.setNodes(buildGraphNodeModels);
+                buildGraphColumnsNodeModelArrayList.add(buildGraphColumnsNodeModel);
+            }
+            else {
+                BuildGraphColumnsNodeModel buildGraphColumnsNodeModel = buildGraphColumnsNodeModelArrayList.get(node.getColumn());
+                buildGraphColumnsNodeModel.getNodes().add(node);
+            }
         }
-        return sb.toString();
+
+        for(Edge edge : iGraph.edgeSet()) {
+            BuildGraphConnectorModel buildGraphConnectorModel = new BuildGraphConnectorModel();
+            buildGraphConnectorModel.setSource(edge.getSource().getId());
+            buildGraphConnectorModel.setTarget(edge.getTarget().getId());
+            buildGraphConnectorsModelArrayList.add(buildGraphConnectorModel);
+        }
+        buildGraphModel.setNodesSize(buildGraphNodeModelArrayList.size());
+        buildGraphModel.setNodes(buildGraphColumnsNodeModelArrayList);
+        buildGraphModel.setConnectors(buildGraphConnectorsModelArrayList);
+        Gson gson = new Gson();
+        return gson.toJson(buildGraphModel);
     }
 
     public static class Edge implements Serializable {

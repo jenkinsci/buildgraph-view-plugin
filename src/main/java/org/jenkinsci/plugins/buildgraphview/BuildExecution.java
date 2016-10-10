@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.BallColor;
 import hudson.model.Run;
 
@@ -11,6 +12,7 @@ import java.text.DateFormat;
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class BuildExecution implements Serializable {
+    private static final long serialVersionUID = 1;
 
     private transient Run build;
 
@@ -47,18 +49,20 @@ public class BuildExecution implements Serializable {
         this.build = build;
         this.buildIndex = buildIndex;
         this.id = "build-" + buildIndex;
-        this.buildUrl = this.build != null ? this.build.getAbsoluteUrl() : null;
+        this.buildUrl = this.getBuildFromUtil().getAbsoluteUrl();
         this.startTime = isStarted() ? DateFormat.getDateTimeInstance(
                 DateFormat.SHORT, DateFormat.SHORT).format(build.getTime())
                 : "";
-        this.buildName = build.getParent().getName();
-        this.buildNumber = "" + build.number;
-        this.iconColor = build.getIconColor();
-        this.fullDisplayName = build.getFullDisplayName();
-        this.description = build.getDescription();
-        this.building = build.isBuilding();
-        this.durationString = build.getDurationString();
-        this.buildSummaryStatusString = build.getBuildStatusSummary().message;
+
+        this.buildName = this.getBuildFromUtil().getParent().getName();
+
+        this.buildNumber = "" + this.getBuildFromUtil().number;
+        this.iconColor = this.getBuildFromUtil().getIconColor();
+        this.fullDisplayName = this.getBuildFromUtil().getFullDisplayName();
+        this.description = this.getBuildFromUtil().getDescription();
+        this.building = this.getBuildFromUtil().isBuilding();
+        this.durationString = this.getBuildFromUtil().getDurationString();
+        this.buildSummaryStatusString = this.getBuildFromUtil().getBuildStatusSummary().message;
     }
 
     public BuildExecution(int buildIndex) {
@@ -110,6 +114,7 @@ public class BuildExecution implements Serializable {
         return "";
     }
 
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     public boolean isStarted() {
         return build != null ? build.getTime() != null : true;
     }
@@ -140,6 +145,13 @@ public class BuildExecution implements Serializable {
 
     public String toString() {
         return (buildName != null && buildNumber != null ? buildName + " #" + buildNumber : "");
+    }
+
+    private Run getBuildFromUtil() {
+        if (this.build == null) {
+            throw new NullPointerException("Build has not been started.");
+        }
+        return this.build;
     }
 
     @Override

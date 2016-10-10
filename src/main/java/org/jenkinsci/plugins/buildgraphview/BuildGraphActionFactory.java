@@ -2,8 +2,6 @@ package org.jenkinsci.plugins.buildgraphview;
 
 import hudson.Extension;
 import hudson.model.*;
-import jenkins.model.Jenkins;
-
 import java.util.Collection;
 import java.util.Collections;
 

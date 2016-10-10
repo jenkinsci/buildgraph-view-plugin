@@ -16,7 +16,7 @@ public abstract class DownStreamRunDeclarer implements ExtensionPoint {
     public abstract List<Run> getDownStream(Run r) throws ExecutionException, InterruptedException;
 
     public static List<DownStreamRunDeclarer> all() {
-        return Jenkins.getInstance().getExtensionList(DownStreamRunDeclarer.class);
+        return JenkinsUtil.getInstance().getExtensionList(DownStreamRunDeclarer.class);
     }
 
 }

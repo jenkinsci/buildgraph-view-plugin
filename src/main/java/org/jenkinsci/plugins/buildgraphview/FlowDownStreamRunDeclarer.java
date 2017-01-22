@@ -43,9 +43,11 @@ public class FlowDownStreamRunDeclarer extends DownStreamRunDeclarer {
         List<Run> runs = new ArrayList<Run>(edges.size());
         for (FlowRun.JobEdge edge : edges) {
             JobInvocation targetJobEdge = edge.getTarget();
-            Run run = targetJobEdge.getBuild();
-            if (run != null) {
-                runs.add(run);
+            if (targetJobEdge.isStarted()) {
+                Run run = targetJobEdge.getBuild();
+                if (run != null) {
+                    runs.add(run);
+                }
             }
         }
         return runs;

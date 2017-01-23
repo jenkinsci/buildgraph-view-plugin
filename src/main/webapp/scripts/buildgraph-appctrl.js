@@ -4,13 +4,15 @@ angular.module('buildgraphapp', [])
     var buildGraphDataModel = {nodes:[],connectors:[]};
     var buildGraphPlumb = jsPlumb.getInstance({Container:"buildgraph"});
     var nodesSize = 0;
+    var isBuilding = false;
     $scope.callAtTimeout = function() {
         $http.get(ajaxPath)
             .then(function(response) {
                 var data = JSON.parse(response.data);
                 var buildGraph = JSON.parse(data.buildGraph);
-                if(buildGraph.isBuilding || nodesSize != buildGraph.nodesSize) {
+                if(buildGraph.isBuilding || nodesSize != buildGraph.nodesSize || isBuilding != buildGraph.isBuilding) {
                     nodesSize = buildGraph.nodesSize;
+                    isBuilding = buildGraph.isBuilding;
                     $scope.buildGraphViewModel = buildGraph;
                     $timeout(function() {
                         buildGraphPlumb.reset();

@@ -8,7 +8,12 @@ angular.module('buildgraphapp', [])
     $scope.callAtTimeout = function() {
         $http.get(ajaxPath)
             .then(function(response) {
-                var data = JSON.parse(response.data);
+                var data = response.data;
+                /* response.data can either be parsed JSON (object) or unparsed String() object
+                 * (or plain type string if angular implementation changes). */
+                if (typeof data === 'string' || data instanceof String) {
+                    data = JSON.parse(response.data);
+                }
                 var buildGraph = JSON.parse(data.buildGraph);
                 if(buildGraph.isBuilding || nodesSize != buildGraph.nodesSize || isBuilding != buildGraph.isBuilding) {
                     nodesSize = buildGraph.nodesSize;

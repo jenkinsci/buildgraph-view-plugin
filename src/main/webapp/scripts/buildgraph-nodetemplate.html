@@ -8,7 +8,7 @@
                 </div>
                 <div class="details">
                     <div ng-show="node.started == true && node.running == false">
-                        {{node.description}}
+                        <span ng-bind-html="node.description | rawHtml"></span>
                         <br/>
                         Status: {{node.status}}
                         <br/>

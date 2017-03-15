@@ -1,8 +1,8 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
-import jenkins.model.Jenkins;
 
 public class BuildGraphProjectAction implements Action {
 
@@ -23,7 +23,8 @@ public class BuildGraphProjectAction implements Action {
     }
 
     @Override
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public String getUrlName() {
-        return Jenkins.getInstance().getRootUrl() + abstractProject.getLastBuild().getUrl() + "BuildGraph";
+        return JenkinsUtil.getInstance().getRootUrl() + abstractProject.getLastBuild().getUrl() + "BuildGraph";
     }
 }

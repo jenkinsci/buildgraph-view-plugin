@@ -149,6 +149,7 @@ public class BuildGraph implements Action {
             BuildGraphNodeModel buildGraphNodeModel = new BuildGraphNodeModel();
             buildGraphNodeModel.setNodeId(item.getId());
             buildGraphNodeModel.setBuildUrl(item.getBuildUrl());
+            buildGraphNodeModel.setParameters(item.getParameters());
             buildGraphNodeModel.setRow(item.getDisplayRow());
             buildGraphNodeModel.setColumn(item.getDisplayColumn());
             buildGraphNodeModel.setColor(item.getIconColor().getHtmlBaseColor());
@@ -232,4 +233,3 @@ public class BuildGraph implements Action {
         }
     }
 }
-

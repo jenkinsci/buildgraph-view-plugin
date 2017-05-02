@@ -22,6 +22,14 @@
                             <img title="view console output" alt="console"
                                  ng-src="{{node.terminalpng}}"/>
                         </a>
+                        <br/>
+                        <div ng-show="node.parameters != null">
+						Parameters:
+							<div ng-repeat="parameter in node.parameters">
+    							{{parameter}}
+    						</div>
+                    	</div>
+                        <br/>
                     </div>
                     <div ng-show="node.started == true && node.running == true">
                         <img title="Started" alt="Started" ng-src="{{node.clockpng}}"/>{{node.timeStampString}} ago<br/>

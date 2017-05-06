@@ -71,7 +71,9 @@ public class BuildGraph implements Action {
 
     private void computeGraphFrom(BuildExecution b) throws ExecutionException, InterruptedException, IOException {
         Run run = b.getBuild();
-        for (DownStreamRunDeclarer declarer : DownStreamRunDeclarer.all()) {
+        List<DownStreamRunDeclarer>  all = DownStreamRunDeclarer.all();
+        if (JenkinsUtil.getInstance().getPlugin("build-flow-plugin") != null) {
+            DownStreamRunDeclarer declarer = new FlowDownStreamRunDeclarer();
             List<Run> runs = declarer.getDownStream(run);
             for (Run r : runs) {
                 if(r != null) {
@@ -82,6 +84,19 @@ public class BuildGraph implements Action {
                 }
             }
         }
+        for (DownStreamRunDeclarer declarer : all) {
+            List<Run> runs = declarer.getDownStream(run);
+            for (Run r : runs) {
+                if(r != null) {
+                    BuildExecution next = getExecution(r);
+                    graph.addVertex(next);
+                    graph.addEdge(b, next, new Edge(b, next));
+                    computeGraphFrom(next);
+                }
+            }
+        }
+
+
     }
 
     private BuildExecution getExecution(Run r) {

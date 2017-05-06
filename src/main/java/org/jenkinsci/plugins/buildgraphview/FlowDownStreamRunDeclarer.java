@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-@Extension(optional = true)
+
 public class FlowDownStreamRunDeclarer extends DownStreamRunDeclarer {
 
     @Override

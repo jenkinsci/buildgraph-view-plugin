@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.buildgraphview;
 
+import java.util.List;
+
 public class BuildGraphNodeModel {
     private String nodeId;
     private int row;
@@ -19,7 +21,8 @@ public class BuildGraphNodeModel {
     private String hourglasspng;
     private String terminalpng;
     private String timeStampString;
-
+    private List<String> parameters;
+    
     public String getNodeId() {
         return nodeId;
     }
@@ -162,5 +165,13 @@ public class BuildGraphNodeModel {
 
     public void setTimeStampString(String timeStampString) {
         this.timeStampString = timeStampString;
+    }
+    
+    public void setParameters(List<String> parameters) {
+    	this.parameters = parameters;
+    }
+    
+    public List<String> getParameters() {
+        return parameters;
     }
 }

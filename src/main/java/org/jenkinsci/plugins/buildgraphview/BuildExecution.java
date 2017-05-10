@@ -2,10 +2,14 @@ package org.jenkinsci.plugins.buildgraphview;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.BallColor;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.Run;
 
 import java.io.Serializable;
 import java.text.DateFormat;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A wrapper on a AbstractBuild that maintains additional layout information, used during graphical rendering.
@@ -44,6 +48,8 @@ public class BuildExecution implements Serializable {
     private int displayColumn;
 
     private int displayRow;
+    
+    private List<String> parameters = null;
 
     public BuildExecution(Run build, int buildIndex) {
         this.build = build;
@@ -63,6 +69,24 @@ public class BuildExecution implements Serializable {
         this.building = this.getBuildFromUtil().isBuilding();
         this.durationString = this.getBuildFromUtil().getDurationString();
         this.buildSummaryStatusString = this.getBuildFromUtil().getBuildStatusSummary().message;
+        
+        // If this build has parameters then get useful Strings out to be displayed in the graph.
+        ParametersAction parameters = this.getBuildFromUtil().getAction(ParametersAction.class);
+        if (parameters != null) {
+            this.parameters = new LinkedList<String>();
+            for (ParameterValue p: parameters.getParameters()) {
+                if (p != null) {
+                    // The String and Boolean parameters are the most useful to display and they 
+                	// are prefixed by "(Type) ", so chop that off, and add the rest in. 
+                    String paramString = p.toString();
+                    if (paramString.startsWith("(") && paramString.indexOf(" ") != -1) {
+                        this.parameters.add(paramString.substring(paramString.indexOf(" ")+1));
+                    } else {
+                        this.parameters.add(paramString);
+                    }
+                }
+            }
+        }
     }
 
     public BuildExecution(int buildIndex) {
@@ -152,6 +176,10 @@ public class BuildExecution implements Serializable {
             throw new NullPointerException("Build has not been started.");
         }
         return this.build;
+    }
+    
+    public List<String> getParameters() {
+        return parameters;
     }
 
     @Override

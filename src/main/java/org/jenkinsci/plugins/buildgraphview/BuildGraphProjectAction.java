@@ -25,6 +25,9 @@ public class BuildGraphProjectAction implements Action {
     @Override
     @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public String getUrlName() {
+        if (abstractProject.getLastBuild() == null) {
+            return JenkinsUtil.getInstance().getRootUrl() + abstractProject.getUrl();
+        }
         return JenkinsUtil.getInstance().getRootUrl() + abstractProject.getLastBuild().getUrl() + "BuildGraph";
     }
 }

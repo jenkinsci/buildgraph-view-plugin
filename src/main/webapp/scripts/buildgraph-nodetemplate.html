@@ -23,7 +23,7 @@
                                  ng-src="{{node.terminalpng}}"/>
                         </a>
                         <br/>
-                        <div ng-show="node.parameters != null">
+                        <div ng-show="node.parameters != null && showparameters">
 						Parameters:
 							<div ng-repeat="parameter in node.parameters">
     							{{parameter}}

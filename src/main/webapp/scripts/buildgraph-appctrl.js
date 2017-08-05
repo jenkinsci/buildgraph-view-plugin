@@ -5,6 +5,11 @@ angular.module('buildgraphapp', [])
     var buildGraphPlumb = jsPlumb.getInstance({Container:"buildgraph"});
     var nodesSize = 0;
     var isBuilding = false;
+    $scope.showparameters = true;
+    $scope.refreshinterval = 200;
+    $scope.toggleparameters = function() {
+        $scope.showparameters = !$scope.showparameters;
+    };
     $scope.callAtTimeout = function() {
         $http.get(ajaxPath)
             .then(function(response) {
@@ -39,22 +44,26 @@ angular.module('buildgraphapp', [])
                             });
                         }
                         buildGraphPlumb.repaintEverything();
-                    },200);
+                    },$scope.refreshinterval);
                 }
             }
         );
 
         $timeout( function(){ $scope.callAtTimeout(); }, 3000);
-    }
+    };
+    $scope.toggleparameters();
     $scope.callAtTimeout();
 }])
-.directive('myBuildGraph', function() {
+.directive('myBuildGraph', function($compile) {
       return {
         restrict: 'E',
         templateUrl: function(element, attrs) {
               return attrs.jenkinsurl + "/plugin/buildgraph-view/scripts/buildgraph-nodetemplate.html";
             },
-        replace: true
+          link: function(scope, element, attrs) {
+              $compile(element.contents())(scope.$new());
+          },
+          replace: true
       };
 })
 .filter('rawHtml', ['$sce', function($sce){

@@ -1,11 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>plugin</artifactId>
-        <version>2.6</version>
-        <relativePath />
-    </parent>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>3.57</version>
+  </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>buildgraph-view</artifactId>
@@ -13,12 +12,12 @@
   <packaging>hpi</packaging>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Build+Graph+View+Plugin</url>
 
-    <properties>
-        <jenkins.version>1.651.3</jenkins.version>
-        <java.level>7</java.level>
-    </properties>
+  <properties>
+    <jenkins.version>2.60.3</jenkins.version>
+    <java.level>8</java.level>
+  </properties>
 
-    <developers>
+  <developers>
     <developer>
       <id>ndeloof</id>
       <name>Nicolas De Loof</name>
@@ -28,8 +27,8 @@
       <name>Greg Gross</name>
     </developer>
     <developer>
-        <id>pskumar448</id>
-        <name>Suresh Kumar</name>
+      <id>pskumar448</id>
+      <name>Suresh Kumar</name>
     </developer>
   </developers>
 
@@ -39,6 +38,21 @@
     <url>https://github.com/jenkinsci/buildgraph-view-plugin</url>
     <tag>HEAD</tag>
   </scm>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-utils</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-classworlds</artifactId>
+        <version>2.6.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -51,53 +65,71 @@
       <artifactId>parameterized-trigger</artifactId>
       <version>2.18</version>
     </dependency>
-      <dependency>
-          <groupId>com.cloudbees.plugins</groupId>
-          <artifactId>build-flow-plugin</artifactId>
-          <version>0.19</version>
-          <optional>true</optional>
-      </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>promoted-builds</artifactId>
+      <version>2.17</version>
+      <exclusions>
+        <exclusion>
+          <groupId>xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.sonatype.sisu</groupId>
+          <artifactId>sisu-guice</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.cloudbees.plugins</groupId>
+      <artifactId>build-flow-plugin</artifactId>
+      <version>0.19</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-project</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.8.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.main</groupId>
+      <artifactId>jenkins-test-harness</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-net</groupId>
+          <artifactId>commons-net</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>2.0.3-beta</version>
+      <version>3.8.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>1.7.1</version>
+      <version>3.19.0</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>promoted-builds</artifactId>
-        <version>2.17</version>
-        <exclusions>
-            <exclusion>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-            </exclusion>
-            <exclusion>
-                <groupId>org.sonatype.sisu</groupId>
-                <artifactId>sisu-guice</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-      <dependency>
-          <groupId>org.jenkins-ci.plugins</groupId>
-          <artifactId>matrix-project</artifactId>
-          <version>1.0</version>
-      </dependency>
-      <dependency>
-          <groupId>com.google.code.gson</groupId>
-          <artifactId>gson</artifactId>
-          <version>2.7</version>
-      </dependency>
-      <dependency>
-          <groupId>com.github.stephenc.findbugs</groupId>
-          <artifactId>findbugs-annotations</artifactId>
-          <version>1.3.9-1</version>
-      </dependency>
   </dependencies>
 
   <repositories>
@@ -113,18 +145,4 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>InjectedTest.java</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
